@@ -5,9 +5,54 @@ var web3js;
 
 check();
 
+let multiTokenBalance_cur;
+let account;
+let contract_cur;
+function updateAccount() {
+    web3js.eth.getAccounts(async function(error, result) {
+        if (result && result.length > 0) {
+            if (account !== result[0]) {
+                account = result[0];
+            }
+        }
+        
+        if (account) {
+        	let temp_address = $('#myInput_address').html();
+        	if (!(await web3js.utils.isAddress(temp_address)))
+        		temp_address = $('#myInput').val();
+        	if (!(await web3js.utils.isAddress(temp_address))){
+        		$('#myUL > li > a').each(function(_index){
+					if($('#myInput').val() == $(this).html()){	
+						temp_address = this.id;
+					}
+				});
+        	}
+        	
+    		if(await web3js.utils.isAddress(temp_address)){
+        		if (contract_cur == undefined || temp_address != contract_cur.options.address){
+        			contract_cur = await (new web3js.eth.Contract(multiToken_abi, temp_address));
+	        		let multiTokenBalance = await contract_cur.methods.balanceOf(account).call();
+	        		if (account && multiTokenBalance != multiTokenBalance_cur) {
+		                multiTokenBalance_cur = multiTokenBalance;
+		                
+		                $('#balance').html('YOUR BALANCE: ' + (multiTokenBalance / 10**18).toFixed(4) + ' multiToken');
+		            }
+        		}
+        	} else {
+        		contract_cur = undefined; 
+        		multiTokenBalance_cur = -1;
+        		$('#balance').html('YOUR BALANCE: -- multiToken');
+        	}
+        }
+        
+        setTimeout(updateAccount, 1000);
+    });
+}
+
 function check(){
 	if (typeof web3 !== 'undefined') {
 	    web3js = new Web3(web3.currentProvider);
+	    updateAccount();
 	    return 1;
 	} else {
 	    alert('No web3js? You should consider trying MetaMask!');
@@ -35,23 +80,19 @@ async function start(token_name, symbol, addresses, weight, manageable){
 	};
 	
 	let contract = new web3js.eth.Contract(multiToken_abi);
-	const {err, gas} = await contract.deploy(options_deploy).estimateGas();
-    if(err){
-    	alert("ERROR deploy estimateGas" + err.toString());
-    	return;
-    } else {
-    	const data = await $.getJSON("https://gasprice.poa.network");
-		console.log(gas, data.standard * 1e9);
-    	
-		options_send = {
-		    from: web3js.eth.defaultAccount,
-		    gas: gas,
-		    gasPrice: data.standard * 1e9
-		}
-		const newContractInstance = await contract.deploy(options_deploy).send(options_send);
-		console.log(newContractInstance.options.address);
+	const gas = await contract.deploy(options_deploy).estimateGas();
+    
+	const data = await $.getJSON("https://gasprice.poa.network");
+	
+	options_send = {
+	    from: account,
+	    gas: gas,
+	    gasPrice: data.standard * 1e9
+	}
+	const newContractInstance = await contract.deploy(options_deploy).send(options_send);
+	console.log(newContractInstance.options.address);
 
-    }
+    
 }
 
 function mintburn(el_id, amount, name_or_address, address_if_name){
