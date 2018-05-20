@@ -65,53 +65,59 @@ contract('MultiToken', function ([_, wallet1, wallet2, wallet3, wallet4, wallet5
         });
 
         it('should have valid prices for exchange tokens', async function() {
-            (await multi.exchangeRate.call(0, 1, 10 * 10**6)).should.be.bignumber.equal(4950495);
-            (await multi.exchangeRate.call(0, 1, 20 * 10**6)).should.be.bignumber.equal(9803921);
-            (await multi.exchangeRate.call(0, 1, 30 * 10**6)).should.be.bignumber.equal(14563106);
-            (await multi.exchangeRate.call(0, 1, 40 * 10**6)).should.be.bignumber.equal(19230769);
-            (await multi.exchangeRate.call(0, 1, 50 * 10**6)).should.be.bignumber.equal(23809523);
-            (await multi.exchangeRate.call(0, 1, 60 * 10**6)).should.be.bignumber.equal(28301886);
-            (await multi.exchangeRate.call(0, 1, 70 * 10**6)).should.be.bignumber.equal(32710280);
-            (await multi.exchangeRate.call(0, 1, 80 * 10**6)).should.be.bignumber.equal(37037037);
-            (await multi.exchangeRate.call(0, 1, 90 * 10**6)).should.be.bignumber.equal(41284403);
-            (await multi.exchangeRate.call(0, 1, 100 * 10**6)).should.be.bignumber.equal(45454545);
+            (await multi.getReturn.call(abc.address, xyz.address, 10 * 10**6)).should.be.bignumber.equal(4950495);
+            (await multi.getReturn.call(abc.address, xyz.address, 20 * 10**6)).should.be.bignumber.equal(9803921);
+            (await multi.getReturn.call(abc.address, xyz.address, 30 * 10**6)).should.be.bignumber.equal(14563106);
+            (await multi.getReturn.call(abc.address, xyz.address, 40 * 10**6)).should.be.bignumber.equal(19230769);
+            (await multi.getReturn.call(abc.address, xyz.address, 50 * 10**6)).should.be.bignumber.equal(23809523);
+            (await multi.getReturn.call(abc.address, xyz.address, 60 * 10**6)).should.be.bignumber.equal(28301886);
+            (await multi.getReturn.call(abc.address, xyz.address, 70 * 10**6)).should.be.bignumber.equal(32710280);
+            (await multi.getReturn.call(abc.address, xyz.address, 80 * 10**6)).should.be.bignumber.equal(37037037);
+            (await multi.getReturn.call(abc.address, xyz.address, 90 * 10**6)).should.be.bignumber.equal(41284403);
+            (await multi.getReturn.call(abc.address, xyz.address, 100 * 10**6)).should.be.bignumber.equal(45454545);
 
-            (await multi.exchangeRate.call(1, 0, 10 * 10**6)).should.be.bignumber.equal(19607843);
-            (await multi.exchangeRate.call(1, 0, 20 * 10**6)).should.be.bignumber.equal(38461538);
-            (await multi.exchangeRate.call(1, 0, 30 * 10**6)).should.be.bignumber.equal(56603773);
-            (await multi.exchangeRate.call(1, 0, 40 * 10**6)).should.be.bignumber.equal(74074074);
-            (await multi.exchangeRate.call(1, 0, 50 * 10**6)).should.be.bignumber.equal(90909090);
-            (await multi.exchangeRate.call(1, 0, 60 * 10**6)).should.be.bignumber.equal(107142857);
-            (await multi.exchangeRate.call(1, 0, 70 * 10**6)).should.be.bignumber.equal(122807017);
-            (await multi.exchangeRate.call(1, 0, 80 * 10**6)).should.be.bignumber.equal(137931034);
-            (await multi.exchangeRate.call(1, 0, 90 * 10**6)).should.be.bignumber.equal(152542372);
-            (await multi.exchangeRate.call(1, 0, 100 * 10**6)).should.be.bignumber.equal(166666666);
+            (await multi.getReturn.call(xyz.address, abc.address, 10 * 10**6)).should.be.bignumber.equal(19607843);
+            (await multi.getReturn.call(xyz.address, abc.address, 20 * 10**6)).should.be.bignumber.equal(38461538);
+            (await multi.getReturn.call(xyz.address, abc.address, 30 * 10**6)).should.be.bignumber.equal(56603773);
+            (await multi.getReturn.call(xyz.address, abc.address, 40 * 10**6)).should.be.bignumber.equal(74074074);
+            (await multi.getReturn.call(xyz.address, abc.address, 50 * 10**6)).should.be.bignumber.equal(90909090);
+            (await multi.getReturn.call(xyz.address, abc.address, 60 * 10**6)).should.be.bignumber.equal(107142857);
+            (await multi.getReturn.call(xyz.address, abc.address, 70 * 10**6)).should.be.bignumber.equal(122807017);
+            (await multi.getReturn.call(xyz.address, abc.address, 80 * 10**6)).should.be.bignumber.equal(137931034);
+            (await multi.getReturn.call(xyz.address, abc.address, 90 * 10**6)).should.be.bignumber.equal(152542372);
+            (await multi.getReturn.call(xyz.address, abc.address, 100 * 10**6)).should.be.bignumber.equal(166666666);
         });
 
         it('should be able to exchange tokens 0 => 1', async function() {
             (await xyz.balanceOf.call(wallet1)).should.be.bignumber.equal(0);
             await abc.approve(multi.address, 50 * 10**6, { from: wallet1 });
-            await multi.exchange(0, 1, 50 * 10**6, { from: wallet1 });
+            await multi.change(abc.address, xyz.address, 50 * 10**6, 23809523, { from: wallet1 });
             (await xyz.balanceOf.call(wallet1)).should.be.bignumber.equal(23809523);
+        });
+
+        it('should not be able to exchange due to high min return argument', async function() {
+            (await xyz.balanceOf.call(wallet1)).should.be.bignumber.equal(0);
+            await abc.approve(multi.address, 50 * 10**6, { from: wallet1 });
+            await multi.change(abc.address, xyz.address, 50 * 10**6, 23809523+1, { from: wallet1 }).should.be.rejectedWith(EVMRevert);
         });
 
         it('should be able to exchange tokens 1 => 0', async function() {
             (await abc.balanceOf.call(wallet2)).should.be.bignumber.equal(0);
             await xyz.approve(multi.address, 50 * 10**6, { from: wallet2 });
-            await multi.exchange(1, 0, 50 * 10**6, { from: wallet2 });
+            await multi.change(xyz.address, abc.address, 50 * 10**6, 90909090, { from: wallet2 });
             (await abc.balanceOf.call(wallet2)).should.be.bignumber.equal(90909090);
         });
 
         it('should be able to buy tokens and sell back', async function() {
             (await xyz.balanceOf.call(wallet1)).should.be.bignumber.equal(0);
             await abc.approve(multi.address, 50 * 10**6, { from: wallet1 });
-            await multi.exchange(0, 1, 50 * 10**6, { from: wallet1 });
+            await multi.change(abc.address, xyz.address, 50 * 10**6, 23809523, { from: wallet1 });
 
             (await abc.balanceOf.call(wallet1)).should.be.bignumber.equal(0);
             (await xyz.balanceOf.call(wallet1)).should.be.bignumber.equal(23809523);
 
             await xyz.approve(multi.address, 23809523, { from: wallet1 });
-            await multi.exchange(1, 0, 23809523, { from: wallet1 });
+            await multi.change(xyz.address, abc.address, 23809523, 49999998, { from: wallet1 });
 
             (await abc.balanceOf.call(wallet1)).should.be.bignumber.equal(49999998);
         });
@@ -126,27 +132,27 @@ contract('MultiToken', function ([_, wallet1, wallet2, wallet3, wallet4, wallet5
         });
 
         it('should have valid prices for exchange tokens', async function() {
-            (await multi.exchangeRate.call(0, 1, 10 * 10**6)).should.be.bignumber.equal(4950494/2);
-            (await multi.exchangeRate.call(0, 1, 20 * 10**6)).should.be.bignumber.equal(9803920/2);
-            (await multi.exchangeRate.call(0, 1, 30 * 10**6)).should.be.bignumber.equal(14563106/2);
-            (await multi.exchangeRate.call(0, 1, 40 * 10**6)).should.be.bignumber.equal(19230768/2);
-            (await multi.exchangeRate.call(0, 1, 50 * 10**6)).should.be.bignumber.equal(23809522/2);
-            (await multi.exchangeRate.call(0, 1, 60 * 10**6)).should.be.bignumber.equal(28301886/2);
-            (await multi.exchangeRate.call(0, 1, 70 * 10**6)).should.be.bignumber.equal(32710280/2);
-            (await multi.exchangeRate.call(0, 1, 80 * 10**6)).should.be.bignumber.equal(37037036/2);
-            (await multi.exchangeRate.call(0, 1, 90 * 10**6)).should.be.bignumber.equal(41284402/2);
-            (await multi.exchangeRate.call(0, 1, 100 * 10**6)).should.be.bignumber.equal(45454544/2);
+            (await multi.getReturn.call(abc.address, xyz.address, 10 * 10**6)).should.be.bignumber.equal(4950494/2);
+            (await multi.getReturn.call(abc.address, xyz.address, 20 * 10**6)).should.be.bignumber.equal(9803920/2);
+            (await multi.getReturn.call(abc.address, xyz.address, 30 * 10**6)).should.be.bignumber.equal(14563106/2);
+            (await multi.getReturn.call(abc.address, xyz.address, 40 * 10**6)).should.be.bignumber.equal(19230768/2);
+            (await multi.getReturn.call(abc.address, xyz.address, 50 * 10**6)).should.be.bignumber.equal(23809522/2);
+            (await multi.getReturn.call(abc.address, xyz.address, 60 * 10**6)).should.be.bignumber.equal(28301886/2);
+            (await multi.getReturn.call(abc.address, xyz.address, 70 * 10**6)).should.be.bignumber.equal(32710280/2);
+            (await multi.getReturn.call(abc.address, xyz.address, 80 * 10**6)).should.be.bignumber.equal(37037036/2);
+            (await multi.getReturn.call(abc.address, xyz.address, 90 * 10**6)).should.be.bignumber.equal(41284402/2);
+            (await multi.getReturn.call(abc.address, xyz.address, 100 * 10**6)).should.be.bignumber.equal(45454544/2);
 
-            (await multi.exchangeRate.call(1, 0, 10 * 10**6)).should.be.bignumber.equal(19607843*2);
-            (await multi.exchangeRate.call(1, 0, 20 * 10**6)).should.be.bignumber.equal(38461538*2);
-            (await multi.exchangeRate.call(1, 0, 30 * 10**6)).should.be.bignumber.equal(56603773*2 + 1);
-            (await multi.exchangeRate.call(1, 0, 40 * 10**6)).should.be.bignumber.equal(74074074*2);
-            (await multi.exchangeRate.call(1, 0, 50 * 10**6)).should.be.bignumber.equal(90909090*2 + 1);
-            (await multi.exchangeRate.call(1, 0, 60 * 10**6)).should.be.bignumber.equal(107142857*2);
-            (await multi.exchangeRate.call(1, 0, 70 * 10**6)).should.be.bignumber.equal(122807017*2 + 1);
-            (await multi.exchangeRate.call(1, 0, 80 * 10**6)).should.be.bignumber.equal(137931034*2);
-            (await multi.exchangeRate.call(1, 0, 90 * 10**6)).should.be.bignumber.equal(152542372*2 + 1);
-            (await multi.exchangeRate.call(1, 0, 100 * 10**6)).should.be.bignumber.equal(166666666*2 + 1);
+            (await multi.getReturn.call(xyz.address, abc.address, 10 * 10**6)).should.be.bignumber.equal(19607843*2);
+            (await multi.getReturn.call(xyz.address, abc.address, 20 * 10**6)).should.be.bignumber.equal(38461538*2);
+            (await multi.getReturn.call(xyz.address, abc.address, 30 * 10**6)).should.be.bignumber.equal(56603773*2 + 1);
+            (await multi.getReturn.call(xyz.address, abc.address, 40 * 10**6)).should.be.bignumber.equal(74074074*2);
+            (await multi.getReturn.call(xyz.address, abc.address, 50 * 10**6)).should.be.bignumber.equal(90909090*2 + 1);
+            (await multi.getReturn.call(xyz.address, abc.address, 60 * 10**6)).should.be.bignumber.equal(107142857*2);
+            (await multi.getReturn.call(xyz.address, abc.address, 70 * 10**6)).should.be.bignumber.equal(122807017*2 + 1);
+            (await multi.getReturn.call(xyz.address, abc.address, 80 * 10**6)).should.be.bignumber.equal(137931034*2);
+            (await multi.getReturn.call(xyz.address, abc.address, 90 * 10**6)).should.be.bignumber.equal(152542372*2 + 1);
+            (await multi.getReturn.call(xyz.address, abc.address, 100 * 10**6)).should.be.bignumber.equal(166666666*2 + 1);
         });
     });
 

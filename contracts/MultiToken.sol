@@ -1,11 +1,12 @@
 pragma solidity ^0.4.23;
 
 import "./BasicMultiToken.sol";
+import "./ERC228.sol";
 
 
-contract MultiToken is BasicMultiToken {
+contract MultiToken is BasicMultiToken, ERC228 {
 
-    uint256[] public weights;
+    mapping(address => uint256) public weights;
     
     constructor(ERC20[] _tokens, uint256[] _weights, string _name, string _symbol, uint8 _decimals) public
         BasicMultiToken(_tokens, _name, _symbol, _decimals)
@@ -15,23 +16,34 @@ contract MultiToken is BasicMultiToken {
 
     function _setWeights(uint256[] _weights) internal {
         require(_weights.length == tokens.length, "Lenghts of _tokens and _weights array should be equal");
-        weights = _weights;
-        for (uint i = 0; i < _weights.length; i++) {
+        for (uint i = 0; i < tokens.length; i++) {
             require(_weights[i] != 0, "The _weights array should not contains zeros");
+            weights[tokens[i]] = _weights[i];
         }
     }
 
-    function exchangeRate(uint _fromIndex, uint _toIndex, uint256 _fromTokenAmount) public view returns(uint256) {
-        uint256 fromBalance = tokens[_fromIndex].balanceOf(this);
-        uint256 toBalance = tokens[_toIndex].balanceOf(this);
-        //return toBalance.sub(fromBalance.mul(toBalance).div(fromBalance.add(_fromTokenAmount)));
-        return toBalance.mul(_fromTokenAmount).mul(weights[_toIndex]).div(weights[_fromIndex]).div(fromBalance.add(_fromTokenAmount));
+    function changeableTokenCount() public view returns (uint16 count) {
+        count = uint16(tokens.length);
     }
 
-    function exchange(uint _fromIndex, uint _toIndex, uint256 _fromTokenAmount) public {
-        uint256 toTokenAmount = exchangeRate(_fromIndex, _toIndex, _fromTokenAmount);
-        require(tokens[_fromIndex].transferFrom(msg.sender, this, _fromTokenAmount));
-        require(tokens[_toIndex].transfer(msg.sender, toTokenAmount));
+    function changeableToken(uint16 _tokenIndex) public view returns (address tokenAddress) {
+        tokenAddress = tokens[_tokenIndex];
+    }
+
+    function getReturn(address _fromToken, address _toToken, uint256 _amount) public view returns(uint256 returnAmount) {
+        uint256 fromBalance = ERC20(_fromToken).balanceOf(this);
+        uint256 toBalance = ERC20(_toToken).balanceOf(this);
+        returnAmount = toBalance.mul(_amount).mul(weights[_toToken]).div(weights[_fromToken]).div(fromBalance.add(_amount));
+    }
+
+    uint256 public res;
+
+    function change(address _fromToken, address _toToken, uint256 _amount, uint256 _minReturn) public returns(uint256 returnAmount) {
+        returnAmount = getReturn(_fromToken, _toToken, _amount);
+        require(returnAmount >= _minReturn, "The return amount is less than _minReturn value");
+        require(ERC20(_fromToken).transferFrom(msg.sender, this, _amount));
+        require(ERC20(_toToken).transfer(msg.sender, returnAmount));
+        emit Change(_fromToken, _toToken, msg.sender, _amount, returnAmount);
     }
 
 }
