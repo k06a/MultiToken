@@ -29,7 +29,6 @@ $('#myInput').on('input change', function(){
 	var token_address = "";
 
 	$('#myUL > li > a').each(function(_index){
-		console.log($('#myInput').val(), $(this).html());
 		if($('#myInput').val() == $(this).html())	
 			token_address = this.id;
 
