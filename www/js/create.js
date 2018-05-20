@@ -45,7 +45,7 @@ $("#create").click(function(){
 	var addresses = [];
 	var coins_symbol = {};
 	var weight = {};
-	$('#drops > div > button').each(function(_i){
+	$('#drops > div > div > button').each(function(_i){
 		if( $(this).html().split(' ')[0] != 'x'){
 			var address = "";
 			var coin = $(this).html().split(' ')[0];
@@ -66,7 +66,7 @@ $("#create").click(function(){
 			});
 		}
 
-		if(_i == $('#drops > div > button').length - 1){
+		if(_i == $('#drops > div > div > button').length - 1){
 			if(addresses.length != unique(addresses).length){
 				alert("Select different Coins");
 			} else {
