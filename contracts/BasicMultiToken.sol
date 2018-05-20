@@ -14,6 +14,7 @@ contract BasicMultiToken is StandardToken, DetailedERC20 {
     constructor(ERC20[] _tokens, string _name, string _symbol, uint8 _decimals) public
         DetailedERC20(_name, _symbol, _decimals)
     {
+        require(_tokens.length >= 2, "Contract do not support less than 2 inner tokens");
         tokens = _tokens;
     }
 
@@ -34,7 +35,7 @@ contract BasicMultiToken is StandardToken, DetailedERC20 {
     function _mint(address _to, uint256 _amount, uint256[] _tokenAmounts) internal {
         require(tokens.length == _tokenAmounts.length, "Lenghts of tokens and _tokenAmounts array should be equal");
         for (uint i = 0; i < tokens.length; i++) {
-            require(tokens[i].transferFrom(msg.sender, this, _tokenAmounts[i]));
+            tokens[i].transferFrom(msg.sender, this, _tokenAmounts[i]);
         }
 
         totalSupply_ = totalSupply_.add(_amount);
@@ -52,7 +53,7 @@ contract BasicMultiToken is StandardToken, DetailedERC20 {
 
         for (uint i = 0; i < someTokens.length; i++) {
             uint256 tokenAmount = _value.mul(someTokens[i].balanceOf(this)).div(totalSupply_);
-            require(someTokens[i].transfer(msg.sender, tokenAmount));
+            someTokens[i].transfer(msg.sender, tokenAmount);
         }
         
         balances[msg.sender] = balances[msg.sender].sub(_value);
