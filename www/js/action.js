@@ -29,7 +29,28 @@ function start(token_name, symbol, addresses, weight, manageable){
 	if(manageable)
 		token_data = manageable_multiToken_data;
 
-	web3js.eth.contract(multiToken_abi).deploy( { data: token_data, arguments: [addresses, weight_arr, token_name, symbol, 18] } );
+	options_deploy = { 
+		data: token_data, 
+		arguments: [addresses, weight_arr, token_name, symbol, 18] 
+	};
+	
+	const [err, gas] = await web3js.eth.Contract.deploy(options_deploy).estimateGas();
+    if(err){
+    	alert("ERROR deploy estimateGas" + err.toString());
+    	return;
+    } else {
+    	const data = await $.getJSON("https://gasprice.poa.network");
+		console.log(gas, data.standard * 1e9);
+    	
+		options_send = {
+		    from: web3js.eth.defaultAccount,
+		    gas: gas,
+		    gasPrice: data.standard * 1e9
+		}
+		const newContractInstance = await web3js.eth.Contract(multiToken_abi).deploy(options_deploy).send(options_send);
+		console.log(newContractInstance.options.address);
+
+    }
 }
 
 function mintburn(el_id, amount, name_or_address, address_if_name){
