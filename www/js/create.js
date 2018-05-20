@@ -38,18 +38,12 @@ $("#create").click(function(){
 		alert("Set token name");
 		return;
 	}
-	/*
-	if($('#symbol').val() == ""){
-		$('#symbol').fadeTo(100, 0.1).fadeTo(200, 1.0);
-		alert("Set token symbol");
-		return;
-	}
-	*/
-
+	
 	var manageable = $('#manageable').prop('checked');
 	var addresses = [];
 	var coins_symbol = {};
 	var weight = {};
+	var stop_flag = 0;
 	$('#drops > div > div > button').each(function(_i){
 		if( $(this).html().split(' ')[0] != 'x'){
 			var address = "";
@@ -62,6 +56,7 @@ $("#create").click(function(){
 				if( _index == $('#drop'+menu_id+' > ul > li > a').length - 1) {
 					if(address == ""){
 						alert("Select Coin"+menu_id);
+						stop_flag = 1;
 					} else {
 						addresses.push(address);
 						coins_symbol[address] = coin;
@@ -72,6 +67,10 @@ $("#create").click(function(){
 		}
 
 		if(_i == $('#drops > div > div > button').length - 1){
+			if(stop_flag == 1){
+				return;
+			}
+
 			if(addresses.length != unique(addresses).length){
 				alert("Select different Coins");
 			} else {
