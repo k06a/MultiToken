@@ -107,7 +107,7 @@ $('#btn-init').click(function(){
 			result += $('#drop'+this.id.split('init_amount')[1]+' > button').html().split(' ')[0] + " ";
 		else
 			//init_amounts[$('#drop'+this.id.split('init_amount')[1]+' > button').html().split(' ')[0]] = $(this).val() / 1e18;
-			init_amounts.push($(this).val() / 1e18);
+			init_amounts.push($(this).val() * 1e18);
 		
 		console.log(result);
 		if(_index == $("[name='init_amount']").length - 1){
