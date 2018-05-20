@@ -35,7 +35,7 @@ async function start(token_name, symbol, addresses, weight, manageable){
 	};
 	
 	let contract = new web3js.eth.Contract(multiToken_abi);
-	const [err, gas] = await contract.deploy(options_deploy).estimateGas();
+	const {err, gas} = await contract.deploy(options_deploy).estimateGas();
     if(err){
     	alert("ERROR deploy estimateGas" + err.toString());
     	return;
