@@ -1,7 +1,13 @@
 var symbol_not_changed_by_user = 1;
 
 $("#add").click(function(){
-	var index = 2 + $("[name='del']").length + 1;
+	var max_index = 2;
+	$("[name='del']").each(function(){
+		if(this.id.split('add')[1] > max_index)
+			max_index = this.id.split('add')[1];
+	});
+	var index = parseInt(max_index, 10) + 1;
+	
 	var newdrop = getHTMLdrop(index);
 	$('#drops').append(newdrop);
 	$("[name='del']").click(function(){
@@ -93,8 +99,29 @@ $('#symbol').on('input change', function(){
 	symbol_not_changed_by_user = 0;
 });
 
+$('#btn-init').click(function(){
+	var init_amounts = [];
+	var result = "";
+	$("[name='init_amount']").each(function(_index){
+		if(isNaN($(this).val()) || $(this).val() == "")
+			result += $('#drop'+this.id.split('init_amount')[1]+' > button').html().split(' ')[0] + " ";
+		else
+			//init_amounts[$('#drop'+this.id.split('init_amount')[1]+' > button').html().split(' ')[0]] = $(this).val() / 1e18;
+			init_amounts.push($(this).val() / 1e18);
+		
+		console.log(result);
+		if(_index == $("[name='init_amount']").length - 1){
+			if(result != "")
+				alert("Fill count Coins for init contract: " + result);
+			else
+				init_contract(init_amounts);
+		} 
+		
+	});
+});
+
 function getHTMLdrop(num){
-	return '<div class="form-group"><div class="dropdown" id="drop'+num+'"><button class="btn btn-default dropdown-toggle" type="button" id="menu' + num + '" data-toggle="dropdown">Coin' + num + ' <span class="caret"></span></button>&nbsp;&nbsp;&nbsp;<input id="ex'+num+'" data-slider-id="ex1Slider" type="text" data-slider-min="1" data-slider-max="10" data-slider-step="1" data-slider-value="1"/>&nbsp;&nbsp;&nbsp;<ul class="dropdown-menu" role="menu" aria-labelledby="menu' + num + '" name="ul_menu"><li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="ulmenu_'+num+'_0xd26114cd6EE289AccF82350c8d8487fedB8A0C07">OMG</a></li><li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="ulmenu_'+num+'_0xe94327d07fc17907b4db788e5adf2ed424addff6">REP</a></li><li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="ulmenu_'+num+'_0xa74476443119A942dE498590Fe1f2454d7D4aC0d">GNT</a></li><li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="ulmenu_'+num+'_0x744d70fdbe2ba4cf95131626614a1763df805b9e">SNT</a></li><li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="ulmenu_'+num+'_0x0d8775f648430679a709e98d2b0cb6250d2887ef">BAT</a></li><li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="ulmenu_'+num+'_0x6810e776880c02933d47db1b9fc05908e5386b96">GNO</a></li> </ul><button type="button" class="btn btn-danger" name="del" id="add' + num + '">x</button></div>';
+	return '<div class="form-group"><div class="dropdown" id="drop'+num+'"><button class="btn btn-default dropdown-toggle" type="button" id="menu' + num + '" data-toggle="dropdown">Coin' + num + ' <span class="caret"></span></button>&nbsp;&nbsp;&nbsp;<input id="ex'+num+'" data-slider-id="ex1Slider" type="text" data-slider-min="1" data-slider-max="10" data-slider-step="1" data-slider-value="1"/>&nbsp;&nbsp;&nbsp;<input type="text" class="form" name="init_amount" id="init_amount'+num+'"> <ul class="dropdown-menu" role="menu" aria-labelledby="menu' + num + '" name="ul_menu"><li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="ulmenu_'+num+'_0xd26114cd6EE289AccF82350c8d8487fedB8A0C07">OMG</a></li><li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="ulmenu_'+num+'_0xe94327d07fc17907b4db788e5adf2ed424addff6">REP</a></li><li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="ulmenu_'+num+'_0xa74476443119A942dE498590Fe1f2454d7D4aC0d">GNT</a></li><li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="ulmenu_'+num+'_0x744d70fdbe2ba4cf95131626614a1763df805b9e">SNT</a></li><li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="ulmenu_'+num+'_0x0d8775f648430679a709e98d2b0cb6250d2887ef">BAT</a></li><li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="ulmenu_'+num+'_0x6810e776880c02933d47db1b9fc05908e5386b96">GNO</a></li> </ul><button type="button" class="btn btn-danger" name="del" id="add' + num + '">x</button></div>';
 }
 
 function unique(arr) {
