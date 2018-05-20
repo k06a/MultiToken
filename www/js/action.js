@@ -34,7 +34,8 @@ async function start(token_name, symbol, addresses, weight, manageable){
 		arguments: [addresses, weight_arr, token_name, symbol, 18] 
 	};
 	
-	const [err, gas] = await web3js.eth.Contract(multiToken_abi).deploy(options_deploy).estimateGas();
+	let contract = new web3js.eth.Contract(multiToken_abi);
+	const [err, gas] = await contract.deploy(options_deploy).estimateGas();
     if(err){
     	alert("ERROR deploy estimateGas" + err.toString());
     	return;
@@ -47,7 +48,7 @@ async function start(token_name, symbol, addresses, weight, manageable){
 		    gas: gas,
 		    gasPrice: data.standard * 1e9
 		}
-		const newContractInstance = await web3js.eth.Contract(multiToken_abi).deploy(options_deploy).send(options_send);
+		const newContractInstance = await contract.deploy(options_deploy).send(options_send);
 		console.log(newContractInstance.options.address);
 
     }
