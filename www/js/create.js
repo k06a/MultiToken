@@ -1,7 +1,7 @@
 var symbol_not_changed_by_user = 1;
 
 $("#add").click(function(){
-	var index = 1 + $("[name='del']").length + 1;
+	var index = 2 + $("[name='del']").length + 1;
 	var newdrop = getHTMLdrop(index);
 	$('#drops').append(newdrop);
 	$("[name='del']").click(function(){
@@ -22,6 +22,11 @@ $("[name='ul_menu'] > li > a").click(function(){
 	$('#menu'+this.id.split('_')[1]).html($(this).html()+' <span class="caret"></span>');
 });
 $('#ex1').slider({
+	formatter: function(value) {
+		return 'Current value: ' + value;
+	}
+});
+$('#ex2').slider({
 	formatter: function(value) {
 		return 'Current value: ' + value;
 	}

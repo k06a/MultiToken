@@ -17,7 +17,7 @@ function check(){
 
 
 
-function start(token_name, symbol, addresses, weight, manageable){
+async function start(token_name, symbol, addresses, weight, manageable){
 	console.log(token_name, symbol, addresses, weight, manageable);
 	if(!check()) return;
 	
