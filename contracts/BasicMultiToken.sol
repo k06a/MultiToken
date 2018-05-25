@@ -18,6 +18,11 @@ contract BasicMultiToken is StandardToken, DetailedERC20 {
         tokens = _tokens;
     }
 
+    function mintFirstTokens(address _to, uint256 _amount, uint256[] _tokenAmounts) public {
+        require(totalSupply_ == 0, "This method can be used with zero total supply only");
+        _mint(_to, _amount, _tokenAmounts);
+    }
+
     function mint(address _to, uint256 _amount) public {
         require(totalSupply_ != 0, "This method can be used with non zero total supply only");
         uint256[] memory tokenAmounts = new uint256[](tokens.length);
@@ -27,9 +32,25 @@ contract BasicMultiToken is StandardToken, DetailedERC20 {
         _mint(_to, _amount, tokenAmounts);
     }
 
-    function mintFirstTokens(address _to, uint256 _amount, uint256[] _tokenAmounts) public {
-        require(totalSupply_ == 0, "This method can be used with zero total supply only");
-        _mint(_to, _amount, _tokenAmounts);
+    function burn(uint256 _value) public {
+        burnSome(_value, tokens);
+    }
+
+    function burnSome(uint256 _value, ERC20[] someTokens) public {
+        require(someTokens.length > 0, "Array of tokens can't be empty");
+
+        uint256 totalSupply = totalSupply_;
+        balances[msg.sender] = balances[msg.sender].sub(_value);
+        totalSupply_ = totalSupply.sub(_value);
+        emit Burn(msg.sender, _value);
+        emit Transfer(msg.sender, address(0), _value);
+
+        for (uint i = 0; i < someTokens.length; i++) {
+            uint256 tokenAmount = someTokens[i].balanceOf(this).mul(_value).div(totalSupply);
+            someTokens[i].transfer(msg.sender, tokenAmount);
+        }
+        
+        
     }
 
     function _mint(address _to, uint256 _amount, uint256[] _tokenAmounts) internal {
@@ -42,24 +63,6 @@ contract BasicMultiToken is StandardToken, DetailedERC20 {
         balances[_to] = balances[_to].add(_amount);
         emit Mint(_to, _amount);
         emit Transfer(address(0), _to, _amount);
-    }
-
-    function burn(uint256 _value) public {
-        burnSome(_value, tokens);
-    }
-
-    function burnSome(uint256 _value, ERC20[] someTokens) public {
-        require(_value <= balances[msg.sender]);
-
-        for (uint i = 0; i < someTokens.length; i++) {
-            uint256 tokenAmount = _value.mul(someTokens[i].balanceOf(this)).div(totalSupply_);
-            someTokens[i].transfer(msg.sender, tokenAmount);
-        }
-        
-        balances[msg.sender] = balances[msg.sender].sub(_value);
-        totalSupply_ = totalSupply_.sub(_value);
-        emit Burn(msg.sender, _value);
-        emit Transfer(msg.sender, address(0), _value);
     }
 
 }
