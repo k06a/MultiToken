@@ -2,6 +2,7 @@ pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./MultiToken.sol";
+import "./ERC228.sol";
 
 
 contract ManageableMultiToken is Ownable, MultiToken {
@@ -30,6 +31,12 @@ contract ManageableMultiToken is Ownable, MultiToken {
         returnAmount = super.change(_fromToken, _toToken, _amount, _minReturn);
     }
 
+    function changeOverERC228(address _fromToken, address _toToken, uint256 _amount, uint256 _minReturn, address exchange) public returns(uint256 returnAmount) {
+        require(!tokensLockedForExchange[_fromToken], "The _fromToken is locked for exchange by multitoken owner");
+        require(!tokensLockedForExchange[_toToken], "The _toToken is locked for exchange by multitoken owner");
+        returnAmount = super.changeOverERC228(_fromToken, _toToken, _amount, _minReturn, exchange);
+    }
+
     // Allow slow modification of weights
 
     function scaleWeights(uint256 _scale) public onlyOwner {
@@ -53,6 +60,17 @@ contract ManageableMultiToken is Ownable, MultiToken {
         
         fromTokenAmount = getFromAmountForChangeWeights(_fromToken, _toToken, _weightDelta);
         returnAmount = change(_fromToken, _toToken, fromTokenAmount, _minReturnAmount);
+
+        weights[_fromToken] = weights[_fromToken].sub(_weightDelta);
+        weights[_toToken] = weights[_toToken].add(_weightDelta);
+    }
+
+    function changeWeightOverERC228(address _fromToken, address _toToken, uint256 _weightDelta, uint256 _minReturnAmount, address exchange) public onlyOwner returns(uint256 fromTokenAmount, uint256 returnAmount) {
+        require(weights[_toToken] > 0, "Specified _toToken is not part of multitoken");
+        require(weights[_fromToken] > _weightDelta, "Can't set weight of _fromToken to zero");
+        
+        fromTokenAmount = getFromAmountForChangeWeights(_fromToken, _toToken, _weightDelta);
+        returnAmount = changeOverERC228(_fromToken, _toToken, fromTokenAmount, _minReturnAmount, exchange);
 
         weights[_fromToken] = weights[_fromToken].sub(_weightDelta);
         weights[_toToken] = weights[_toToken].add(_weightDelta);

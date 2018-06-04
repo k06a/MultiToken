@@ -38,8 +38,20 @@ contract MultiToken is BasicMultiToken, ERC228 {
         returnAmount = getReturn(_fromToken, _toToken, _amount);
         require(returnAmount > 0, "The return amount is less than _minReturn value");
         require(returnAmount >= _minReturn, "The return amount is less than _minReturn value");
+        
         ERC20(_fromToken).transferFrom(msg.sender, this, _amount);
         ERC20(_toToken).transfer(msg.sender, returnAmount);
+        emit Change(_fromToken, _toToken, msg.sender, _amount, returnAmount);
+    }
+
+    function changeOverERC228(address _fromToken, address _toToken, uint256 _amount, uint256 _minReturn, address exchange) public returns(uint256 returnAmount) {
+        returnAmount = getReturn(_fromToken, _toToken, _amount);
+        require(returnAmount > 0, "The return amount is less than _minReturn value");
+        require(returnAmount >= _minReturn, "The return amount is less than _minReturn value");
+
+        ERC20(_toToken).approve(exchange, returnAmount);
+        uint256 realReturnAmount = ERC228(exchange).change(_toToken, _fromToken, returnAmount, _minReturn);
+        require(realReturnAmount >= _amount);
         emit Change(_fromToken, _toToken, msg.sender, _amount, returnAmount);
     }
 
