@@ -49,12 +49,11 @@ contract BasicMultiToken is StandardToken, DetailedERC20 {
             uint256 tokenAmount = someTokens[i].balanceOf(this).mul(_value).div(totalSupply);
             someTokens[i].transfer(msg.sender, tokenAmount);
         }
-        
-        
     }
 
     function _mint(address _to, uint256 _amount, uint256[] _tokenAmounts) internal {
         require(tokens.length == _tokenAmounts.length, "Lenghts of tokens and _tokenAmounts array should be equal");
+
         for (uint i = 0; i < tokens.length; i++) {
             tokens[i].transferFrom(msg.sender, this, _tokenAmounts[i]);
         }

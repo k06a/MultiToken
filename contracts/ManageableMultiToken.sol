@@ -49,7 +49,7 @@ contract ManageableMultiToken is Ownable, MultiToken {
 
     function changeWeight(address _fromToken, address _toToken, uint256 _weightDelta, uint256 _minReturnAmount) public onlyOwner returns(uint256 fromTokenAmount, uint256 returnAmount) {
         require(weights[_toToken] > 0, "Specified _toToken is not part of multitoken");
-        require(weights[_fromToken] > _weightDelta, "Can't from weight of _fromToken to zero");
+        require(weights[_fromToken] > _weightDelta, "Can't set weight of _fromToken to zero");
         
         fromTokenAmount = getFromAmountForChangeWeights(_fromToken, _toToken, _weightDelta);
         returnAmount = change(_fromToken, _toToken, fromTokenAmount, _minReturnAmount);
