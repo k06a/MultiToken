@@ -27,7 +27,7 @@ contract BasicMultiToken is StandardToken, DetailedERC20 {
         require(totalSupply_ != 0, "This method can be used with non zero total supply only");
         uint256[] memory tokenAmounts = new uint256[](tokens.length);
         for (uint i = 0; i < tokens.length; i++) {
-            tokenAmounts[i] = _amount.mul(tokens[i].balanceOf(this)).div(totalSupply_);
+            tokenAmounts[i] = tokens[i].balanceOf(this).mul(_amount).div(totalSupply_);
         }
         _mint(_to, _amount, tokenAmounts);
     }
