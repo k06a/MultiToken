@@ -17,7 +17,7 @@ import EVMRevert from './helpers/EVMRevert';
 import EVMThrow from './helpers/EVMThrow';
 
 const Token = artifacts.require('Token.sol');
-const MultiToken = artifacts.require('MultiToken.sol');
+const BasicMultiToken = artifacts.require('BasicMultiToken.sol');
 
 contract('BasicMultiToken', function ([_, wallet1, wallet2, wallet3, wallet4, wallet5]) {
 
@@ -30,22 +30,39 @@ contract('BasicMultiToken', function ([_, wallet1, wallet2, wallet3, wallet4, wa
         abc = await Token.new("ABC");
         await abc.mint(_, 1000e6);
         await abc.mint(wallet1, 50e6);
+        await abc.mint(wallet2, 50e6);
 
         xyz = await Token.new("XYZ");
         await xyz.mint(_, 500e6);
+        await xyz.mint(wallet1, 50e6);
         await xyz.mint(wallet2, 50e6);
 
         lmn = await Token.new("LMN");
         await lmn.mint(_, 100e6);
     });
 
+    it('should fail to create multitoken for 1 token', async function() {
+        await BasicMultiToken.new([abc.address], "Multi", "1ABC", 18).should.be.rejectedWith(EVMRevert);
+        await BasicMultiToken.new([xyz.address], "Multi", "1XYZ", 18).should.be.rejectedWith(EVMRevert);
+    });
+
     describe('mint', async function () {
         beforeEach(async function() {
-            multi = await MultiToken.new([abc.address, xyz.address], [1, 1], "Multi", "1ABC_1XYZ", 18);
+            multi = await BasicMultiToken.new([abc.address, xyz.address], "Multi", "1ABC_1XYZ", 18);
         });
 
         it('should not mint first tokens with mint method', async function() {
             await multi.mint(_, 1).should.be.rejectedWith(EVMRevert);
+        });
+
+        it('should mint second tokens with mint method', async function() {
+            await abc.approve(multi.address, 1000e6);
+            await xyz.approve(multi.address, 500e6);
+            await multi.mintFirstTokens(_, 1000, [1000e6, 500e6]);
+
+            await abc.approve(multi.address, 10e6, { from: wallet1 });
+            await xyz.approve(multi.address, 5e6, { from: wallet1 });
+            await multi.mint(wallet1, 10, { from: wallet1 });
         });
 
         it('should mint first tokens with mintFirstTokens method', async function() {
@@ -60,11 +77,18 @@ contract('BasicMultiToken', function ([_, wallet1, wallet2, wallet3, wallet4, wa
             await multi.mintFirstTokens(_, 1000, [1000e6, 500e6]);
             await multi.mintFirstTokens(_, 1, [2e6, 1e6]).should.be.rejectedWith(EVMRevert);
         });
+
+        it('should not mint invalid number of volumes', async function() {
+            await abc.approve(multi.address, 1002e6);
+            await xyz.approve(multi.address, 501e6);
+            await multi.mintFirstTokens(_, 1000, [1000e6, 500e6, 100e6]).should.be.rejectedWith(EVMRevert);
+            await multi.mintFirstTokens(_, 1, [2e6]).should.be.rejectedWith(EVMRevert);
+        });
     });
 
     describe('burn', async function () {
         beforeEach(async function() {
-            multi = await MultiToken.new([abc.address, xyz.address], [1, 1], "Multi", "1ABC_1XYZ", 18);
+            multi = await BasicMultiToken.new([abc.address, xyz.address], "Multi", "1ABC_1XYZ", 18);
             await abc.approve(multi.address, 1000e6);
             await xyz.approve(multi.address, 500e6);
             await multi.mintFirstTokens(_, 1000, [1000e6, 500e6]);
@@ -88,6 +112,10 @@ contract('BasicMultiToken', function ([_, wallet1, wallet2, wallet3, wallet4, wa
 
             (await abc.balanceOf.call(multi.address)).should.be.bignumber.equal(0);
             (await xyz.balanceOf.call(multi.address)).should.be.bignumber.equal(0);
+        });
+
+        it('should not be able to burn none tokens', async function() {
+            await multi.burnSome(100, []).should.be.rejectedWith(EVMRevert);
         });
 
         it('should be able to burn in case of some tokens paused', async function() {
