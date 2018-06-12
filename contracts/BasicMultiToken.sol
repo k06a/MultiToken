@@ -46,8 +46,10 @@ contract BasicMultiToken is StandardToken, DetailedERC20 {
         emit Transfer(msg.sender, address(0), _value);
 
         for (uint i = 0; i < someTokens.length; i++) {
-            uint256 tokenAmount = someTokens[i].balanceOf(this).mul(_value).div(totalSupply);
-            someTokens[i].transfer(msg.sender, tokenAmount);
+            uint256 prevBalance = someTokens[i].balanceOf(this);
+            uint256 tokenAmount = prevBalance.mul(_value).div(totalSupply);
+            someTokens[i].transfer(msg.sender, tokenAmount); // Can't use require because not all ERC20 tokens return bool
+            require(someTokens[i].balanceOf(this) == prevBalance.sub(tokenAmount), "Invalid token behavior");
         }
     }
 
@@ -55,7 +57,9 @@ contract BasicMultiToken is StandardToken, DetailedERC20 {
         require(tokens.length == _tokenAmounts.length, "Lenghts of tokens and _tokenAmounts array should be equal");
 
         for (uint i = 0; i < tokens.length; i++) {
-            tokens[i].transferFrom(msg.sender, this, _tokenAmounts[i]);
+            uint256 prevBalance = tokens[i].balanceOf(this);
+            tokens[i].transferFrom(msg.sender, this, _tokenAmounts[i]); // Can't use require because not all ERC20 tokens return bool
+            require(tokens[i].balanceOf(this) == prevBalance.add(_tokenAmounts[i]), "Invalid token behavior");
         }
 
         totalSupply_ = totalSupply_.add(_amount);

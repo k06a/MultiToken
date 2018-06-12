@@ -1,5 +1,5 @@
-//const Feeless = artifacts.require("Feeless");
+//const MultiToken = artifacts.require("MultiToken");
 
 module.exports = function(deployer) {
-    //deployer.deploy(Feeless);
+    //deployer.deploy(MultiToken);
 };

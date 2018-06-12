@@ -1,5 +1,5 @@
-// @flow
-'use strict'
+'use strict';
+/* @flow */
 
 const abi = require('ethereumjs-abi');
 const BigNumber = web3.BigNumber;
@@ -9,12 +9,7 @@ const should = require('chai')
     .use(require('chai-bignumber')(web3.BigNumber))
     .should();
 
-import ether from './helpers/ether';
-import { advanceBlock } from './helpers/advanceToBlock';
-import { increaseTimeTo, duration } from './helpers/increaseTime';
-import latestTime from './helpers/latestTime';
 import EVMRevert from './helpers/EVMRevert';
-import EVMThrow from './helpers/EVMThrow';
 
 const Token = artifacts.require('Token.sol');
 const MultiToken = artifacts.require('MultiToken.sol');
