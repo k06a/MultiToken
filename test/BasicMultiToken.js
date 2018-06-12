@@ -9,10 +9,6 @@ const should = require('chai')
     .use(require('chai-bignumber')(web3.BigNumber))
     .should();
 
-import ether from './helpers/ether';
-import { advanceBlock } from './helpers/advanceToBlock';
-import { increaseTimeTo, duration } from './helpers/increaseTime';
-import latestTime from './helpers/latestTime';
 import EVMRevert from './helpers/EVMRevert';
 import EVMThrow from './helpers/EVMThrow';
 
@@ -97,7 +93,7 @@ contract('BasicMultiToken', function ([_, wallet1, wallet2, wallet3, wallet4, wa
             await _abc.approve(brokenMulti.address, 1000e6);
             await _xyz.approve(brokenMulti.address, 500e6);
             await brokenMulti.mintFirstTokens(_, 1000, [1000e6, 500e6]).should.be.rejectedWith(EVMRevert);
-        })
+        });
     });
 
     describe('burn', async function () {
@@ -159,6 +155,38 @@ contract('BasicMultiToken', function ([_, wallet1, wallet2, wallet3, wallet4, wa
             await multi.burnSome(500, [abc.address, xyz.address, lmn.address]);
             (await multi.balanceOf.call(_)).should.be.bignumber.equal(500);
             (await lmn.balanceOf.call(_)).should.be.bignumber.equal(lmnBalance / 2);
+        });
+
+        it('should handle wrong transfer of first token', async function() {
+            const _abc = await BrokenTransferToken.new("ABC");
+            await _abc.mint(_, 1000e6);
+            const _xyz = await Token.new("XYZ");
+            await _xyz.mint(_, 500e6);
+
+            const brokenMulti = await BasicMultiToken.new([_abc.address, _xyz.address], "Multi", "1ABC_1XYZ", 18);
+            await _abc.approve(brokenMulti.address, 1000e6);
+            await _xyz.approve(brokenMulti.address, 500e6);
+            await brokenMulti.mintFirstTokens(_, 1000, [1000e6, 500e6]);
+
+            brokenMulti.burn(100).should.be.rejectedWith(EVMRevert);
+            brokenMulti.burnSome(100, [_abc.address]).should.be.rejectedWith(EVMRevert);
+            brokenMulti.burnSome(100, [_xyz.address]).should.be.fulfilled;
+        });
+
+        it('should handle wrong transfer of last token', async function() {
+            const _abc = await Token.new("ABC");
+            await _abc.mint(_, 1000e6);
+            const _xyz = await BrokenTransferToken.new("XYZ");
+            await _xyz.mint(_, 500e6);
+
+            const brokenMulti = await BasicMultiToken.new([_abc.address, _xyz.address], "Multi", "1ABC_1XYZ", 18);
+            await _abc.approve(brokenMulti.address, 1000e6);
+            await _xyz.approve(brokenMulti.address, 500e6);
+            await brokenMulti.mintFirstTokens(_, 1000, [1000e6, 500e6]);
+
+            brokenMulti.burn(100).should.be.rejectedWith(EVMRevert);
+            brokenMulti.burnSome(100, [_xyz.address]).should.be.rejectedWith(EVMRevert);
+            brokenMulti.burnSome(100, [_abc.address]).should.be.fulfilled;
         });
     });
 });
