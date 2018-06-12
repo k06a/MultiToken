@@ -1,5 +1,5 @@
-// @flow
-'use strict'
+'use strict';
+/* @flow */
 
 const abi = require('ethereumjs-abi');
 const BigNumber = web3.BigNumber;

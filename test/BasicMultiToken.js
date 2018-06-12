@@ -1,5 +1,5 @@
-// @flow
-'use strict'
+'use strict';
+/* @flow */
 
 const abi = require('ethereumjs-abi');
 const BigNumber = web3.BigNumber;
@@ -168,9 +168,9 @@ contract('BasicMultiToken', function ([_, wallet1, wallet2, wallet3, wallet4, wa
             await _xyz.approve(brokenMulti.address, 500e6);
             await brokenMulti.mintFirstTokens(_, 1000, [1000e6, 500e6]);
 
-            brokenMulti.burn(100).should.be.rejectedWith(EVMRevert);
-            brokenMulti.burnSome(100, [_abc.address]).should.be.rejectedWith(EVMRevert);
-            brokenMulti.burnSome(100, [_xyz.address]).should.be.fulfilled;
+            await brokenMulti.burn(100).should.be.rejectedWith(EVMRevert);
+            await brokenMulti.burnSome(100, [_abc.address]).should.be.rejectedWith(EVMRevert);
+            await brokenMulti.burnSome(100, [_xyz.address]).should.be.fulfilled;
         });
 
         it('should handle wrong transfer of last token', async function() {
@@ -184,9 +184,9 @@ contract('BasicMultiToken', function ([_, wallet1, wallet2, wallet3, wallet4, wa
             await _xyz.approve(brokenMulti.address, 500e6);
             await brokenMulti.mintFirstTokens(_, 1000, [1000e6, 500e6]);
 
-            brokenMulti.burn(100).should.be.rejectedWith(EVMRevert);
-            brokenMulti.burnSome(100, [_xyz.address]).should.be.rejectedWith(EVMRevert);
-            brokenMulti.burnSome(100, [_abc.address]).should.be.fulfilled;
+            await brokenMulti.burn(100).should.be.rejectedWith(EVMRevert);
+            await brokenMulti.burnSome(100, [_xyz.address]).should.be.rejectedWith(EVMRevert);
+            await brokenMulti.burnSome(100, [_abc.address]).should.be.fulfilled;
         });
     });
 });
