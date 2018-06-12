@@ -34,6 +34,66 @@ contract('MultiToken', function ([_, wallet1, wallet2, wallet3, wallet4, wallet5
         await lmn.mint(_, 100e6);
     });
 
+    it('should failure on wrong constructor arguments', async function () {
+        await MultiToken.new([abc.address, xyz.address], [1, 1, 1], "Multi", "1ABC_1XYZ", 18).should.be.rejectedWith(EVMRevert);
+        await MultiToken.new([abc.address, xyz.address], [1], "Multi", "1ABC_1XYZ", 18).should.be.rejectedWith(EVMRevert);
+        await MultiToken.new([abc.address, xyz.address], [1, 0], "Multi", "1ABC_0XYZ", 18).should.be.rejectedWith(EVMRevert);
+        await MultiToken.new([abc.address, xyz.address], [0, 1], "Multi", "0ABC_1XYZ", 18).should.be.rejectedWith(EVMRevert);
+    });
+
+    describe('ERC228', async function () {
+        it('should have correct changeableTokenCount implementation', async function () {
+            const multi2 = await MultiToken.new([abc.address, xyz.address], [1, 1], "Multi", "1ABC_1XYZ", 18);
+            (await multi2.changeableTokenCount.call()).should.be.bignumber.equal(2);
+
+            const multi3 = await MultiToken.new([abc.address, xyz.address, lmn.address], [1, 1, 1], "Multi", "1ABC_1XYZ", 18);
+            (await multi3.changeableTokenCount.call()).should.be.bignumber.equal(3);
+        });
+
+        it('should have correct changeableToken implementation', async function () {
+            const multi2 = await MultiToken.new([abc.address, xyz.address], [1, 1], "Multi", "1ABC_1XYZ", 18);
+            (await multi2.changeableToken.call(0)).should.be.equal(abc.address);
+            (await multi2.changeableToken.call(1)).should.be.equal(xyz.address);
+
+            const multi3 = await MultiToken.new([abc.address, xyz.address, lmn.address], [1, 1, 1], "Multi", "1ABC_1XYZ", 18);
+            (await multi3.changeableToken.call(0)).should.be.equal(abc.address);
+            (await multi3.changeableToken.call(1)).should.be.equal(xyz.address);
+            (await multi3.changeableToken.call(2)).should.be.equal(lmn.address);
+        });
+
+        it('should have correct getReturn implementation', async function () {
+            const multi = await MultiToken.new([abc.address, xyz.address], [1, 1], "Multi", "1ABC_1XYZ", 18);
+            (await multi.getReturn.call(abc.address, xyz.address, 100)).should.be.bignumber.equal(0);
+
+            await abc.approve(multi.address, 1000e6);
+            await xyz.approve(multi.address, 500e6);
+            await multi.mintFirstTokens(_, 1000, [1000e6, 500e6]);
+
+            (await multi.getReturn.call(abc.address, lmn.address, 100)).should.be.bignumber.equal(0);
+            (await multi.getReturn.call(lmn.address, xyz.address, 100)).should.be.bignumber.equal(0);
+            (await multi.getReturn.call(lmn.address, lmn.address, 100)).should.be.bignumber.equal(0);
+            (await multi.getReturn.call(abc.address, xyz.address, 100)).should.be.bignumber.not.equal(0);
+
+            (await multi.getReturn.call(abc.address, abc.address, 100)).should.be.bignumber.equal(0);
+            (await multi.getReturn.call(xyz.address, xyz.address, 100)).should.be.bignumber.equal(0);
+        });
+
+        it('should have correct change implementation for missing and same tokens', async function () {
+            const multi = await MultiToken.new([abc.address, xyz.address], [1, 1], "Multi", "1ABC_1XYZ", 18);
+
+            await abc.approve(multi.address, 1000e6);
+            await xyz.approve(multi.address, 500e6);
+            await multi.mintFirstTokens(_, 1000, [1000e6, 500e6]);
+
+            await multi.change(abc.address, lmn.address, 100, 0).should.be.rejectedWith(EVMRevert);
+            await multi.change(lmn.address, xyz.address, 100, 0).should.be.rejectedWith(EVMRevert);
+            await multi.change(lmn.address, lmn.address, 100, 0).should.be.rejectedWith(EVMRevert);
+
+            await multi.change(abc.address, abc.address, 100, 0).should.be.rejectedWith(EVMRevert);
+            await multi.change(xyz.address, xyz.address, 100, 0).should.be.rejectedWith(EVMRevert);
+        });
+    });
+
     describe('exchange 1:1', async function () {
         beforeEach(async function() {
             multi = await MultiToken.new([abc.address, xyz.address], [1, 1], "Multi", "1ABC_1XYZ", 18);

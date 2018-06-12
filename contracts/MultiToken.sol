@@ -27,7 +27,7 @@ contract MultiToken is BasicMultiToken, ERC228 {
     }
 
     function getReturn(address _fromToken, address _toToken, uint256 _amount) public view returns(uint256 returnAmount) {
-        if (weights[_fromToken] > 0 && weights[_toToken] > 0) {
+        if (weights[_fromToken] > 0 && weights[_toToken] > 0 && _fromToken != _toToken) {
             uint256 fromBalance = ERC20(_fromToken).balanceOf(this);
             uint256 toBalance = ERC20(_toToken).balanceOf(this);
             returnAmount = toBalance.mul(_amount).mul(weights[_toToken]).div(weights[_fromToken]).div(fromBalance.add(_amount));
