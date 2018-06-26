@@ -11,10 +11,19 @@ contract BasicMultiToken is StandardToken, DetailedERC20 {
     event Mint(address indexed minter, uint256 value);
     event Burn(address indexed burner, uint256 value);
     
-    constructor(ERC20[] _tokens, string _name, string _symbol, uint8 _decimals) public
-        DetailedERC20(_name, _symbol, _decimals)
-    {
+    constructor() public DetailedERC20("", "", 0) {
+    }
+
+    function init(ERC20[] _tokens, string _name, string _symbol, uint8 _decimals) public {
+        require(decimals == 0, "init: contract was already initialized");
+        require(_decimals > 0, "init: _decimals should not be zero");
+        require(bytes(_name).length > 0, "init: _name should not be empty");
+        require(bytes(_symbol).length > 0, "init: _symbol should not be empty");
         require(_tokens.length >= 2, "Contract do not support less than 2 inner tokens");
+
+        name = _name;
+        symbol = _symbol;
+        decimals = _decimals;
         tokens = _tokens;
     }
 

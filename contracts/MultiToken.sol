@@ -7,15 +7,19 @@ import "./ERC228.sol";
 contract MultiToken is BasicMultiToken, ERC228 {
 
     mapping(address => uint256) public weights;
-    
-    constructor(ERC20[] _tokens, uint256[] _weights, string _name, string _symbol, uint8 _decimals) public
-        BasicMultiToken(_tokens, _name, _symbol, _decimals)
-    {
+
+    function init(ERC20[] _tokens, uint256[] _weights, string _name, string _symbol, uint8 _decimals) public {
+        super.init(_tokens, _name, _symbol, _decimals);
         require(_weights.length == tokens.length, "Lenghts of _tokens and _weights array should be equal");
         for (uint i = 0; i < tokens.length; i++) {
             require(_weights[i] != 0, "The _weights array should not contains zeros");
+            require(weights[tokens[i]] == 0, "The _tokens array have duplicates");
             weights[tokens[i]] = _weights[i];
         }
+    }
+
+    function init2(ERC20[] _tokens, uint256[] _weights, string _name, string _symbol, uint8 _decimals) public {
+        init(_tokens, _weights, _name, _symbol, _decimals);
     }
 
     function changeableTokenCount() public view returns (uint16 count) {
