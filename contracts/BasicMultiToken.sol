@@ -77,4 +77,16 @@ contract BasicMultiToken is StandardToken, DetailedERC20 {
         emit Transfer(address(0), _to, _amount);
     }
 
+    function allTokens() public view returns(ERC20[]) {
+        return tokens;
+    }
+
+    function allBalances() public view returns(uint256[]) {
+        uint256[] memory balances = new uint256[](tokens.length);
+        for (uint i = 0; i < tokens.length; i++) {
+            balances[i] = tokens[i].balanceOf(this);
+        }
+        return balances;
+    }
+
 }
