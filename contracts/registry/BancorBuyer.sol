@@ -82,9 +82,8 @@ contract BancorBuyer {
         }
     }
 
-    function buyAndMint(
+    function buy(
         IMultiToken _mtkn, // may be 0
-        uint256 _minAmount,
         address[] _exchanges, // may have 0
         uint256[] _values,
         bytes[] _datas
@@ -108,11 +107,24 @@ contract BancorBuyer {
             balances[msg.sender] = balances[msg.sender].sub(_values[i]);
             tokenBalances[msg.sender][token] = tokenBalances[msg.sender][token].add(token.balanceOf(this).sub(tokenBalance));
         }
+    }
+
+    function buyAndMint(
+        IMultiToken _mtkn, // may be 0
+        uint256 _minAmount,
+        address[] _exchanges, // may have 0
+        uint256[] _values,
+        bytes[] _datas
+    ) 
+        payable
+        public
+    {
+        buy(_mtkn, _exchanges, _values, _datas);
 
         uint256 totalSupply = _mtkn.totalSupply();
         uint256 bestAmount = uint256(-1);
-        for (i = 0; i < _exchanges.length; i++) {
-            token = _mtkn.tokens(i);
+        for (uint i = 0; i < _exchanges.length; i++) {
+            ERC20 token = _mtkn.tokens(i);
 
             // Approve XXX to mtkn
             uint256 thisTokenBalance = tokenBalances[msg.sender][token];
@@ -120,9 +132,9 @@ contract BancorBuyer {
             _values[i] = token.balanceOf(this);
             token.approve(_mtkn, thisTokenBalance);
             
-            uint256 value = totalSupply.mul(thisTokenBalance).div(mtknTokenBalance);
-            if (value < bestAmount) {
-                bestAmount = value;
+            uint256 amount = totalSupply.mul(thisTokenBalance).div(mtknTokenBalance);
+            if (amount < bestAmount) {
+                bestAmount = amount;
             }
         }
 
