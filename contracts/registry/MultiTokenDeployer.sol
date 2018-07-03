@@ -1,7 +1,7 @@
 pragma solidity ^0.4.24;
 
 import "./IDeployer.sol";
-import "../MultiToken.sol";
+import "../FeeMultiToken.sol";
 
 
 contract MultiTokenDeployer is IDeployer {
@@ -13,7 +13,7 @@ contract MultiTokenDeployer is IDeployer {
             (data[0] == 0x18 && data[1] == 0x2a && data[2] == 0x54 && data[3] == 0x15)
         );
 
-        mtkn = new MultiToken();
+        mtkn = new FeeMultiToken();
         require(mtkn.call(data));
     }
 }

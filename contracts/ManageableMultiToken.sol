@@ -13,10 +13,12 @@ contract ManageableMultiToken is Ownable, MultiToken {
 
     function lockTokenForExchange(address token) public onlyOwner {
         tokensLockedForExchange[token] = true;
+        emit Update();
     }
 
     function unlockTokenForExchange(address token) public onlyOwner {
         delete tokensLockedForExchange[token];
+        emit Update();
     }
 
     function getReturn(address _fromToken, address _toToken, uint256 _amount) public view returns(uint256 returnAmount) {

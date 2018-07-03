@@ -73,4 +73,12 @@ contract MultiToken is BasicMultiToken, ERC228 {
         emit Change(_fromToken, _toToken, msg.sender, _amount, returnAmount);
     }
 
+    function allWeights() public view returns(uint256[]) {
+        uint256[] memory result = new uint256[](tokens.length);
+        for (uint i = 0; i < tokens.length; i++) {
+            result[i] = weights[tokens[i]];
+        }
+        return result;
+    }
+
 }
