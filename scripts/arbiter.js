@@ -22,8 +22,8 @@ process.on('unhandledRejection', (reason, p) => {
 (async function () {
     //const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
     //const web3 = new Web3(new Web3.providers.HttpProvider('https://ropsten.infura.io/'));
-    const web3 = new Web3(new Web3.providers.WebsocketProvider('ws://localhost:8546'));
-    //const web3 = new Web3(new Web3.providers.WebsocketProvider('ws://ropsten.infura.io/ws'));
+    //const web3 = new Web3(new Web3.providers.WebsocketProvider('ws://localhost:8546'));
+    const web3 = new Web3(new Web3.providers.WebsocketProvider('ws://ropsten.infura.io/ws'));
     //const web3 = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/GOGw1ym3Hu5NytWUre29'));
 
     if (privateKey.length != 66) {
@@ -46,23 +46,24 @@ process.on('unhandledRejection', (reason, p) => {
     for (let multiTokenAddress of multiTokensAddresses) {
         const multiToken = new web3.eth.Contract(multi_abi, multiTokenAddress);
         const tokensCount = await multiToken.methods.changeableTokenCount().call();
-        
+
         const tokens = await Promise.all(
-            Array.from({length: tokensCount}, (x,i) => multiToken.methods.changeableToken(i).call()));
-        
+            Array.from({length: tokensCount}, (x,i) => multiToken.methods.changeableToken(i).call())
+        );
+
         // Token weights
         const weights = await Promise.all(
             tokens.map(ta => multiToken.methods.weights(ta).call())
         );
         const tokenWeights = new Map(weights.map((w,i) => [tokens[i], w]));
-        
+
         // Token amounts
         const amounts = await Promise.all(
             Array.from(tokens, ta => new web3.eth.Contract(erc20_abi, ta))
                  .map(t => t.methods.balanceOf(multiTokenAddress).call())
         );
         const tokenAmounts = new Map(amounts.map((a,i) => [tokens[i], a]));
-        
+
         // Find profit n^2 (need optimize)
         let bestTokenA;
         let bestTokenB;
@@ -90,7 +91,7 @@ process.on('unhandledRejection', (reason, p) => {
             bestTokenB = tokens[1];
             const bestTokenAmountA = tokenAmounts.get(bestTokenA);
             const bestTokenAmountB = tokenAmounts.get(bestTokenB);
-            
+
             const percent = (bestRatio - 1) / 2;
             const amount = bestTokenAmountA * percent;
             const minimumReturn = bestTokenAmountB - bestTokenAmountB/(1 + percent);

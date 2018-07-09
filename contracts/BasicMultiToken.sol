@@ -2,9 +2,10 @@ pragma solidity ^0.4.24;
 
 import "openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/DetailedERC20.sol";
+import "./ERC1133.sol";
 
 
-contract BasicMultiToken is StandardToken, DetailedERC20 {
+contract BasicMultiToken is StandardToken, DetailedERC20, ERC1133 {
     
     ERC20[] public tokens;
 
@@ -75,6 +76,14 @@ contract BasicMultiToken is StandardToken, DetailedERC20 {
         balances[_to] = balances[_to].add(_amount);
         emit Mint(_to, _amount);
         emit Transfer(address(0), _to, _amount);
+    }
+
+    function tokensCount() public view returns(uint) {
+        return tokens.length;
+    }
+
+    function tokens(uint _index) public view returns(ERC20) {
+        return tokens[_index];
     }
 
     function allTokens() public view returns(ERC20[]) {
