@@ -6,6 +6,7 @@ import "./ERC228.sol";
 
 contract MultiToken is BasicMultiToken, ERC228 {
 
+    uint inLendingMode;
     mapping(address => uint256) public weights;
 
     function init(ERC20[] _tokens, uint256[] _weights, string _name, string _symbol, uint8 _decimals) public {
@@ -39,6 +40,7 @@ contract MultiToken is BasicMultiToken, ERC228 {
     }
 
     function change(address _fromToken, address _toToken, uint256 _amount, uint256 _minReturn) public returns(uint256 returnAmount) {
+        require(inLendingMode == 0);
         returnAmount = getReturn(_fromToken, _toToken, _amount);
         require(returnAmount > 0, "The return amount is zero");
         require(returnAmount >= _minReturn, "The return amount is less than _minReturn value");
@@ -55,6 +57,7 @@ contract MultiToken is BasicMultiToken, ERC228 {
     }
 
     function changeOverERC228(address _fromToken, address _toToken, uint256 _amount, address exchange) public returns(uint256 returnAmount) {
+        require(inLendingMode == 0);
         returnAmount = getReturn(_fromToken, _toToken, _amount);
         require(returnAmount > 0, "The return amount is zero");
 
@@ -72,6 +75,16 @@ contract MultiToken is BasicMultiToken, ERC228 {
 
         emit Change(_fromToken, _toToken, msg.sender, _amount, returnAmount);
     }
+
+    // Instant Loans
+
+    function lend(address _to, ERC20 _token, uint256 _amount, address _target, bytes _data) public payable {
+        inLendingMode += 1;
+        super.lend(_to, _token, _amount, _target, _data);
+        inLendingMode -= 1;
+    }
+
+    // Public Getters
 
     function allWeights() public view returns(uint256[]) {
         uint256[] memory result = new uint256[](tokens.length);

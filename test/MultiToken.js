@@ -35,6 +35,29 @@ contract('MultiToken', function ([_, wallet1, wallet2, wallet3, wallet4, wallet5
         await lmn.mint(_, 100e6);
     });
 
+    // it.only("1", async function() {
+    //     const mt = await MultiToken.new();
+    //     var x = abi.simpleEncode("init2(address[],uint256[],string,string,uint8)",
+    //         [
+    //             "0x0d8775f648430679a709e98d2b0cb6250d2887ef", // BAT
+    //             "0x744d70fdbe2ba4cf95131626614a1763df805b9e", // SNT
+    //             "0x4CEdA7906a5Ed2179785Cd3A40A69ee8bc99C466", // AION
+    //             "0x1f573d6fb3f13d689ff844b4ce37794d79a7ff1c", // BNT
+    //             "0xbf2179859fc6d5bee9bf9158632dc51678a4100e", // ELF
+    //         ], 
+    //         [
+    //             3,
+    //             2,
+    //             2,
+    //             2,
+    //             1,
+    //         ],
+    //         "MostCapitalized",
+    //         "MTKN",
+    //         18);
+    //     console.log(x.toString('hex'));
+    // });
+
     it('should failure on wrong constructor arguments', async function () {
         const mt = await MultiToken.new();
         await mt.init2([abc.address, xyz.address], [1, 1, 1], "Multi", "1ABC_1XYZ", 18).should.be.rejectedWith(EVMRevert);

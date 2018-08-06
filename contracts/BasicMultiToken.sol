@@ -1,11 +1,13 @@
 pragma solidity ^0.4.24;
 
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/DetailedERC20.sol";
 import "./ERC1133.sol";
+import "./ERC1003Token.sol";
 
 
-contract BasicMultiToken is StandardToken, DetailedERC20, ERC1133 {
+contract BasicMultiToken is StandardToken, DetailedERC20, ERC1003Token, ERC1133 {
     
     ERC20[] public tokens;
 
@@ -77,6 +79,17 @@ contract BasicMultiToken is StandardToken, DetailedERC20, ERC1133 {
         emit Mint(_to, _amount);
         emit Transfer(address(0), _to, _amount);
     }
+
+    // Instant Loans
+
+    function lend(address _to, ERC20 _token, uint256 _amount, address _target, bytes _data) public payable {
+        uint256 prevBalance = _token.balanceOf(this);
+        _token.transfer(_to, _amount);
+        require(caller_.makeCall.value(msg.value)(_target, _data));
+        require(_token.balanceOf(this) >= prevBalance, "Lended token must be refilled");
+    }
+
+    // Public Getters
 
     function tokensCount() public view returns(uint) {
         return tokens.length;
