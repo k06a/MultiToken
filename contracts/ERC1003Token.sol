@@ -12,13 +12,8 @@ contract ERC1003Caller is Ownable {
 }
 
 contract ERC1003Token is ERC20 {
-
-    ERC1003Caller public caller_;
+    ERC1003Caller public caller_ = new ERC1003Caller();
     address[] internal sendersStack_;
-
-    constructor() public {
-        caller_ = new ERC1003Caller();
-    }
 
     function approveAndCall(address _to, uint256 _value, bytes _data) public payable returns (bool) {
         sendersStack_.push(msg.sender);
@@ -29,13 +24,7 @@ contract ERC1003Token is ERC20 {
     }
 
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
-        if (_from != address(caller_)) {
-            return super.transferFrom(_from, _to, _value);
-        }
-
-        require(sendersStack_.length > 0);
-        address from = sendersStack_[sendersStack_.length - 1];
+        address from = (_from != address(caller_)) ? _from : sendersStack_[sendersStack_.length - 1];
         return super.transferFrom(from, _to, _value);
     }
-
 }
