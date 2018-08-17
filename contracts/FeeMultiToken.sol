@@ -10,11 +10,17 @@ contract FeeMultiToken is Ownable, MultiToken {
     using CheckedERC20 for ERC20;
 
     uint256 public constant ONE_HUNDRED_PERCRENTS = 1000000;
+    uint256 public lendFee;
     uint256 public changeFee;
     uint256 public refferalFee;
 
     function init(ERC20[] _tokens, uint256[] _weights, string _name, string _symbol, uint8 /*_decimals*/) public {
         super.init(_tokens, _weights, _name, _symbol, 18);
+    }
+
+    function setLendFee(uint256 _lendFee) public onlyOwner {
+        require(_lendFee <= 30000, "setLendFee: fee should be not greater than 3%");
+        lendFee = _lendFee;
     }
 
     function setChangeFee(uint256 _changeFee) public onlyOwner {
@@ -47,6 +53,6 @@ contract FeeMultiToken is Ownable, MultiToken {
     function lend(address _to, ERC20 _token, uint256 _amount, address _target, bytes _data) public payable {
         uint256 prevBalance = _token.balanceOf(this);
         super.lend(_to, _token, _amount, _target, _data);
-        require(_token.balanceOf(this) >= prevBalance.mul(101).div(100), "Lended token must be refilled with 1% fee");
+        require(_token.balanceOf(this) >= prevBalance.mul(ONE_HUNDRED_PERCRENTS.add(lendFee)).div(ONE_HUNDRED_PERCRENTS), "lend: tokens must be returned with lend fee");
     }
 }
