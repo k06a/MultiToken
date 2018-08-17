@@ -4,8 +4,13 @@ node_modules/
 .node-xmlhttprequest-sync-*
 .idea/*
 
+coverage.json
 coverage/
 coverageEnv/
 allFiredEvents
-coverage.json
 scTopics
+
+profiler.json
+profiler/
+profilerEnv/
+spTopics

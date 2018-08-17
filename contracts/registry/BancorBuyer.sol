@@ -2,38 +2,25 @@ pragma solidity ^0.4.24;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
-
-
-contract IMultiToken {
-    function changeableTokenCount() external view returns(uint16 count);
-    function tokens(uint256 i) public view returns(ERC20);
-    function weights(address t) public view returns(uint256);
-    function totalSupply() public view returns(uint256);
-    function mint(address _to, uint256 _amount) public;
-}
+import "../interface/IMultiToken.sol";
+import "../ext/CheckedERC20.sol";
 
 
 contract BancorBuyer {
     using SafeMath for uint256;
+    using CheckedERC20 for ERC20;
 
     mapping(address => uint256) public balances;
     mapping(address => mapping(address => uint256)) public tokenBalances; // [owner][token]
-
-    function sumWeightOfMultiToken(IMultiToken mtkn) public view returns(uint256 sumWeight) {
-        for (uint i = mtkn.changeableTokenCount(); i > 0; i--) {
-            sumWeight += mtkn.weights(mtkn.tokens(i - 1));
-        }
-    }
     
-    function allBalances(address _account, address[] _tokens) public view returns(uint256[]) {
-        uint256[] memory tokenValues = new uint256[](_tokens.length);
+    function allBalances(address _account, address[] _tokens) public view returns(uint256[] _tokenBalances) {
+        _tokenBalances = new uint256[](_tokens.length);
         for (uint i = 0; i < _tokens.length; i++) {
-            tokenValues[i] = tokenBalances[_account][_tokens[i]];
+            _tokenBalances[i] = tokenBalances[_account][_tokens[i]];
         }
-        return tokenValues;
     }
 
-    function deposit(address _beneficiary, address[] _tokens, uint256[] _tokenValues) payable external {
+    function deposit(address _beneficiary, address[] _tokens, uint256[] _tokenValues) external payable {
         if (msg.value > 0) {
             balances[_beneficiary] = balances[_beneficiary].add(msg.value);
         }
@@ -42,9 +29,7 @@ contract BancorBuyer {
             ERC20 token = ERC20(_tokens[i]);
             uint256 tokenValue = _tokenValues[i];
 
-            uint256 balance = token.balanceOf(this);
-            token.transferFrom(msg.sender, this, tokenValue);
-            require(token.balanceOf(this) == balance.add(tokenValue));
+            token.checkedTransferFrom(msg.sender, this, tokenValue);
             tokenBalances[_beneficiary][token] = tokenBalances[_beneficiary][token].add(tokenValue);
         }
     }
@@ -59,9 +44,7 @@ contract BancorBuyer {
             ERC20 token = ERC20(_tokens[i]);
             uint256 tokenValue = _tokenValues[i];
 
-            uint256 tokenBalance = token.balanceOf(this);
-            token.transfer(_to, tokenValue);
-            require(token.balanceOf(this) == tokenBalance.sub(tokenValue));
+            token.checkedTransfer(_to, tokenValue);
             tokenBalances[msg.sender][token] = tokenBalances[msg.sender][token].sub(tokenValue);
         }
     }
@@ -74,30 +57,85 @@ contract BancorBuyer {
         uint256[] memory tokenValues = allBalances(msg.sender, _tokens);
         withdrawInternal(_to, balances[msg.sender], _tokens, tokenValues);
     }
-
-    // function approveAndCall(address _to, uint256 _value, bytes _data, address[] _tokens, uint256[] _tokenValues) payable external {
-    //     uint256[] memory tempBalances = new uint256[](_tokens.length);
-    //     for (uint i = 0; i < _tokens.length; i++) {
-    //         ERC20 token = ERC20(_tokens[i]);
-    //         uint256 tokenValue = _tokenValues[i];
-
-    //         tempBalances[i] = token.balanceOf(this);
-    //         token.approve(_to, tokenValue);
-    //     }
-
-    //     require(_to.call.value(_value)(_data));
-    //     balances[msg.sender] = balances[msg.sender].add(msg.value).sub(_value);
-
-    //     for (i = 0; i < _tokens.length; i++) {
-    //         token = ERC20(_tokens[i]);
-    //         tokenValue = _tokenValues[i];
-
-    //         uint256 tokenSpent = tempBalances[i].sub(token.balanceOf(this));
-    //         tokenBalances[msg.sender][token] = tokenBalances[msg.sender][token].sub(tokenSpent);
-    //         token.approve(_to, 0);
-    //     }
-    // }
     
+    ////////////////////////////////////////////////////////////////
+    
+    function buy10(
+        ERC20[] _tokens,
+        address[] _exchanges,
+        uint256[] _values,
+        bytes _data1,
+        bytes _data2,
+        bytes _data3,
+        bytes _data4,
+        bytes _data5,
+        bytes _data6,
+        bytes _data7,
+        bytes _data8,
+        bytes _data9,
+        bytes _data10
+    ) 
+        public
+        payable
+    {
+        balances[msg.sender] = balances[msg.sender].add(msg.value);
+        if (_exchanges.length > 0) {
+            buyInternal(_tokens[0], _exchanges[0], _values[0], _data1);
+            if (_exchanges.length > 1) {
+                buyInternal(_tokens[1], _exchanges[1], _values[1], _data2);
+                if (_exchanges.length > 2) {
+                    buyInternal(_tokens[2], _exchanges[2], _values[2], _data3);
+                    if (_exchanges.length > 3) {
+                        buyInternal(_tokens[3], _exchanges[3], _values[3], _data4);
+                        if (_exchanges.length > 4) {
+                            buyInternal(_tokens[4], _exchanges[4], _values[4], _data5);
+                            if (_exchanges.length > 5) {
+                                buyInternal(_tokens[5], _exchanges[5], _values[5], _data6);
+                                if (_exchanges.length > 6) {
+                                    buyInternal(_tokens[6], _exchanges[6], _values[6], _data7);
+                                    if (_exchanges.length > 7) {
+                                        buyInternal(_tokens[7], _exchanges[7], _values[7], _data8);
+                                        if (_exchanges.length > 8) {
+                                            buyInternal(_tokens[8], _exchanges[8], _values[8], _data9);
+                                            if (_exchanges.length > 9) {
+                                                buyInternal(_tokens[9], _exchanges[9], _values[9], _data10);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    function buy10bundle(
+        IMultiToken _mtkn,
+        ERC20[] _tokens,
+        address[] _exchanges,
+        uint256[] _values,
+        bytes _data1,
+        bytes _data2,
+        bytes _data3,
+        bytes _data4,
+        bytes _data5,
+        bytes _data6,
+        bytes _data7,
+        bytes _data8,
+        bytes _data9,
+        bytes _data10
+    ) 
+        public
+        payable
+    {
+        buy10(_tokens, _exchanges, _values, _data1, _data2, _data3, _data4, _data5, _data6, _data7, _data8, _data9, _data10);
+        bundleInternal(_mtkn, _values);
+    }
+
+    ////////////////////////////////////////////////////////////////
+
     function buyInternal(
         ERC20 token,
         address _exchange,
@@ -106,6 +144,9 @@ contract BancorBuyer {
     ) 
         internal
     {
+        if (_data.length == 0) {
+            return;
+        }
         require(
             // 0xa9059cbb - transfer(address,uint256)
             !(_data[0] == 0xa9 && _data[1] == 0x05 && _data[2] == 0x9c && _data[3] == 0xbb) &&
@@ -122,7 +163,7 @@ contract BancorBuyer {
             .add(token.balanceOf(this).sub(tokenBalance));
     }
     
-    function mintInternal(
+    function bundleInternal(
         IMultiToken _mtkn,
         uint256[] _notUsedValues
     ) 
@@ -130,7 +171,7 @@ contract BancorBuyer {
     {
         uint256 totalSupply = _mtkn.totalSupply();
         uint256 bestAmount = uint256(-1);
-        uint256 tokensCount = _mtkn.changeableTokenCount();
+        uint256 tokensCount = _mtkn.tokensCount();
         for (uint i = 0; i < tokensCount; i++) {
             ERC20 token = _mtkn.tokens(i);
 
@@ -146,8 +187,8 @@ contract BancorBuyer {
             }
         }
 
-        // Mint mtkn
-        _mtkn.mint(msg.sender, bestAmount);
+        // Bundle mtkn
+        _mtkn.bundle(msg.sender, bestAmount);
         
         for (i = 0; i < tokensCount; i++) {
             token = _mtkn.tokens(i);
@@ -156,202 +197,5 @@ contract BancorBuyer {
                 .sub(_notUsedValues[i].sub(token.balanceOf(this)));
         }
     }
-    
-    // function buyAndMintInternal(
-    //     IMultiToken _mtkn,
-    //     uint256 _minAmount,
-    //     address[] _tokens,
-    //     address[] _exchanges,
-    //     uint256[] _values,
-    //     bytes[] _datas
-    // ) 
-    //     internal
-    // {
-    //     for (uint i = 0; i < _tokens.length; i++) {
-    //         buyInternal(ERC20(_tokens[i]), _exchanges[i], _values[i], _datas[i]);
-    //     }
-    //     mintInternal(_mtkn, _minAmount, _values);
-    // }
-    
-    ////////////////////////////////////////////////////////////////
-    
-    function buy10(
-        address[] _tokens,
-        address[] _exchanges,
-        uint256[] _values,
-        bytes _data1,
-        bytes _data2,
-        bytes _data3,
-        bytes _data4,
-        bytes _data5,
-        bytes _data6,
-        bytes _data7,
-        bytes _data8,
-        bytes _data9,
-        bytes _data10
-    ) 
-        payable
-        public
-    {
-        balances[msg.sender] = balances[msg.sender].add(msg.value);
-        buyInternal(ERC20(_tokens[0]), _exchanges[0], _values[0], _data1);
-        if (_tokens.length == 1) {
-            return;
-        }
-        buyInternal(ERC20(_tokens[1]), _exchanges[1], _values[1], _data2);
-        if (_tokens.length == 2) {
-            return;
-        }
-        buyInternal(ERC20(_tokens[2]), _exchanges[2], _values[2], _data3);
-        if (_tokens.length == 3) {
-            return;
-        }
-        buyInternal(ERC20(_tokens[3]), _exchanges[3], _values[3], _data4);
-        if (_tokens.length == 4) {
-            return;
-        }
-        buyInternal(ERC20(_tokens[4]), _exchanges[4], _values[4], _data5);
-        if (_tokens.length == 5) {
-            return;
-        }
-        buyInternal(ERC20(_tokens[5]), _exchanges[5], _values[5], _data6);
-        if (_tokens.length == 6) {
-            return;
-        }
-        buyInternal(ERC20(_tokens[6]), _exchanges[6], _values[6], _data7);
-        if (_tokens.length == 7) {
-            return;
-        }
-        buyInternal(ERC20(_tokens[7]), _exchanges[7], _values[7], _data8);
-        if (_tokens.length == 8) {
-            return;
-        }
-        buyInternal(ERC20(_tokens[8]), _exchanges[8], _values[8], _data9);
-        if (_tokens.length == 9) {
-            return;
-        }
-        buyInternal(ERC20(_tokens[9]), _exchanges[9], _values[9], _data10);
-    }
-    
-    ////////////////////////////////////////////////////////////////
-    
-    function buy10mint(
-        IMultiToken _mtkn,
-        address[] _tokens,
-        address[] _exchanges,
-        uint256[] _values,
-        bytes _data1,
-        bytes _data2,
-        bytes _data3,
-        bytes _data4,
-        bytes _data5,
-        bytes _data6,
-        bytes _data7,
-        bytes _data8,
-        bytes _data9,
-        bytes _data10
-    ) 
-        payable
-        public
-    {
-        buy10(_tokens, _exchanges, _values, _data1, _data2, _data3, _data4, _data5, _data6, _data7, _data8, _data9, _data10);
-        mintInternal(_mtkn, _values);
-    }
-    
-    ////////////////////////////////////////////////////////////////
-    
-    function buyOne(
-        address _token,
-        address _exchange,
-        uint256 _value,
-        bytes _data
-    ) 
-        payable
-        public
-    {
-        balances[msg.sender] = balances[msg.sender].add(msg.value);
-        buyInternal(ERC20(_token), _exchange, _value, _data);
-    }
-    
-    // function buyMany(
-    //     address[] _tokens,
-    //     address[] _exchanges,
-    //     uint256[] _values,
-    //     bytes[] _datas
-    // ) 
-    //     payable
-    //     public
-    // {
-    //     balances[msg.sender] = balances[msg.sender].add(msg.value);
-    //     for (uint i = 0; i < _tokens.length; i++) {
-    //         buyInternal(ERC20(_tokens[i]), _exchanges[i], _values[i], _datas[i]);
-    //     }
-    // }
-
-    // function buy(
-    //     IMultiToken _mtkn, // may be 0
-    //     address[] _exchanges, // may have 0
-    //     uint256[] _values,
-    //     bytes[] _datas
-    // ) 
-    //     payable
-    //     public
-    // {
-    //     require(_mtkn.changeableTokenCount() == _exchanges.length, "");
-
-    //     balances[msg.sender] = balances[msg.sender].add(msg.value);
-    //     for (uint i = 0; i < _exchanges.length; i++) {
-    //         if (_exchanges[i] == 0) {
-    //             continue;
-    //         }
-
-    //         ERC20 token = _mtkn.tokens(i);
-            
-    //         // ETH => XXX
-    //         uint256 tokenBalance = token.balanceOf(this);
-    //         require(_exchanges[i].call.value(_values[i])(_datas[i]));
-    //         balances[msg.sender] = balances[msg.sender].sub(_values[i]);
-    //         tokenBalances[msg.sender][token] = tokenBalances[msg.sender][token].add(token.balanceOf(this).sub(tokenBalance));
-    //     }
-    // }
-
-    // function buyAndMint(
-    //     IMultiToken _mtkn, // may be 0
-    //     uint256 _minAmount,
-    //     address[] _exchanges, // may have 0
-    //     uint256[] _values,
-    //     bytes[] _datas
-    // ) 
-    //     payable
-    //     public
-    // {
-    //     buy(_mtkn, _exchanges, _values, _datas);
-
-    //     uint256 totalSupply = _mtkn.totalSupply();
-    //     uint256 bestAmount = uint256(-1);
-    //     for (uint i = 0; i < _exchanges.length; i++) {
-    //         ERC20 token = _mtkn.tokens(i);
-
-    //         // Approve XXX to mtkn
-    //         uint256 thisTokenBalance = tokenBalances[msg.sender][token];
-    //         uint256 mtknTokenBalance = token.balanceOf(_mtkn);
-    //         _values[i] = token.balanceOf(this);
-    //         token.approve(_mtkn, thisTokenBalance);
-            
-    //         uint256 amount = totalSupply.mul(thisTokenBalance).div(mtknTokenBalance);
-    //         if (amount < bestAmount) {
-    //             bestAmount = amount;
-    //         }
-    //     }
-
-    //     require(bestAmount >= _minAmount);
-    //     _mtkn.mint(msg.sender, bestAmount);
-
-    //     for (i = 0; i < _exchanges.length; i++) {
-    //         token = _mtkn.tokens(i);
-    //         token.approve(_mtkn, 0);
-    //         tokenBalances[msg.sender][token] = tokenBalances[msg.sender][token].sub(token.balanceOf(this).sub(_values[i]));
-    //     }
-    // }
 
 }
