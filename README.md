@@ -1,7 +1,7 @@
-# MultiTKN
+# MultiToken
 
-[![Build Status](https://travis-ci.org/MultiTKN/MultiTKN.svg?branch=master)](https://travis-ci.org/MultiTKN/MultiTKN)
-[![Coverage Status](https://coveralls.io/repos/github/MultiTKN/MultiTKN/badge.svg)](https://coveralls.io/github/MultiTKN/MultiTKN)
+[![Build Status](https://travis-ci.org/MultiToken/MultiToken.svg?branch=master)](https://travis-ci.org/MultiToken/MultiToken)
+[![Coverage Status](https://coveralls.io/repos/github/MultiToken/MultiToken/badge.svg)](https://coveralls.io/github/MultiToken/MultiToken)
 
 ERC20 token solidity smart contract allowing aggreagate any number of ERC20 tokens in any proportion
 
