@@ -43,6 +43,7 @@
   "scripts": {
     "test": "truffle test",
     "coverage": "./node_modules/.bin/solidity-coverage",
+    "profiler": "./node_modules/.bin/solidity-profiler",
     "rpc": "scripts/rpc.sh"
   },
   "repository": {

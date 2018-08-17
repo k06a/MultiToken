@@ -13,7 +13,13 @@ module.exports = {
             host: "localhost",
             port: 8555,
             network_id: "*",
-            gas: 0xffffffff
+            gas: 0xfffffffffff
+        },
+        profiler: {
+            host: "localhost",
+            port: 8555,
+            network_id: "*",
+            gas: 0xfffffffffff
         }
     },
     solc: {
