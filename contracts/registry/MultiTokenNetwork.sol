@@ -5,7 +5,7 @@ import "openzeppelin-solidity/contracts/lifecycle/Pausable.sol";
 import "./IDeployer.sol";
 
 
-contract MultiTokenRegistry is Pausable {
+contract MultiTokenNetwork is Pausable {
 
     event NewMultitoken(address indexed mtkn);
     event NewDeployer(uint256 indexed index, address indexed oldDeployer, address indexed newDeployer);
@@ -30,6 +30,7 @@ contract MultiTokenRegistry is Pausable {
     }
 
     function setDeployer(uint256 index, IDeployer deployer) public onlyOwner whenNotPaused {
+        require(deployer.owner() == address(this), "setDeployer: first set MultiTokenNetwork as owner");
         emit NewDeployer(index, deployers[index], deployer);
         deployers[index] = deployer;
     }
