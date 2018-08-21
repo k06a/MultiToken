@@ -140,7 +140,6 @@ window.addEventListener('load', async function() {
                 return tokenContract.methods.balanceOf(multitokenContract.options.address).call();
             })
         )).map(b => web3js.utils.toBN(b));
-        const allTokensBalancesSum = allTokensBalances.reduce((a, b) => a.add(b));
 
         // Get token prices to determine amounts
         const json = await $.getJSON('https://api.bancor.network/0.1/currencies/tokens?limit=100&skip=0&fromCurrencyCode=ETH&includeTotal=false&orderBy=liquidityDepth&sortOrder=desc');
@@ -149,14 +148,18 @@ window.addEventListener('load', async function() {
             tokenPriceETH[object.code] = object.price;
         }
 
+        const multitokenCapitalization = allTokensBalances
+            .map((b,i) => b.mul(tokenPriceETH[allTokensNames[i]]))
+            .reduce((a, b) => a.add(b));
+
         const value = web3js.utils.toBN(web3js.utils.toWei($('#buy-for-eth-input').val()));
-        const amounts = [];
-        const minReturns = [];
+        const amounts = [value];
+        const minReturns = [0];
         const paths = [bancorTokens.ETH, bancorConverters.BNT, bancorTokens.BNT];
         const pathStartIndexes = [0];
         const firstChange = bancorNetworkContract.methods.convertForMultiple(paths, pathStartIndexes, amounts, minReturns, multiBuyerContract.options.address).encodeABI().substr(2);
         for (let i = 0; i < allTokens.length; i++) {
-            const amount = value.mul(allTokensBalances[i]).div(allTokensBalancesSum);
+            const amount = value.mul(allTokensBalances[i]).mul(allTokensNames[i]).div(multitokenCapitalization);
             amounts.push(amount);
             minReturns.push(amount / tokenPriceETH[allTokensNames[i]] * 0.98); // -2%
             pathStartIndexes.push(paths.length);
@@ -164,8 +167,8 @@ window.addEventListener('load', async function() {
             paths.push(bancorConverters[allTokensNames[i]]);
             paths.push(bancorTokens[allTokensNames[i]]);
         }
-
         const otherChanges = bancorNetworkContract.methods.convertForMultiple(paths, pathStartIndexes, amounts, minReturns, multiBuyerContract.options.address).encodeABI().substr(2);
+
         const data = multiBuyerContract.methods.buy(
             multitokenContract.options.address,
             0,
