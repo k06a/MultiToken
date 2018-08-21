@@ -1,6 +1,6 @@
 pragma solidity ^0.4.24;
 
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/lifecycle/Pausable.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/DetailedERC20.sol";
 import "./ext/CheckedERC20.sol";
@@ -8,7 +8,7 @@ import "./ext/ERC1003Token.sol";
 import "./interface/IBasicMultiToken.sol";
 
 
-contract BasicMultiToken is StandardToken, DetailedERC20, ERC1003Token, IBasicMultiToken {
+contract BasicMultiToken is Pausable, StandardToken, DetailedERC20, ERC1003Token, IBasicMultiToken {
     using CheckedERC20 for ERC20;
 
     ERC20[] public tokens;
@@ -68,7 +68,7 @@ contract BasicMultiToken is StandardToken, DetailedERC20, ERC1003Token, IBasicMu
         }
     }
 
-    function _bundle(address _beneficiary, uint256 _amount, uint256[] _tokenAmounts) internal {
+    function _bundle(address _beneficiary, uint256 _amount, uint256[] _tokenAmounts) internal whenNotPaused {
         require(tokens.length == _tokenAmounts.length, "Lenghts of tokens and _tokenAmounts array should be equal");
 
         for (uint i = 0; i < tokens.length; i++) {
@@ -120,9 +120,9 @@ contract BasicMultiToken is StandardToken, DetailedERC20, ERC1003Token, IBasicMu
         }
     }
 
-    function allTokensBalancesDecimals() public view returns(ERC20[] _tokens, uint256[] _balances, uint8[] _decimals) {
+    function allTokensDecimalsBalances() public view returns(ERC20[] _tokens, uint8[] _decimals, uint256[] _balances) {
         _tokens = allTokens();
-        _balances = allBalances();
         _decimals = allDecimals();
+        _balances = allBalances();
     }
 }

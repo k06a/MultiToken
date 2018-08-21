@@ -1,145 +1,159 @@
+<!DOCTYPE html>
 <html>
-	<head>
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/10.0.2/css/bootstrap-slider.css">
-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/10.0.2/css/bootstrap-slider.min.css">
-
-		<link rel="stylesheet" href="./css/checkbox.css">
-		<link rel="stylesheet" href="./css/list.css">
-
-		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-		<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/10.0.2/bootstrap-slider.js"></script>
-		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/10.0.2/bootstrap-slider.min.js"></script>
-		<script type="text/javascript" src="./js/lib/web3.min.js"></script>
-		
-		<style>
-		   #left { position: absolute; left: 0; top: 0; width: 50%; }
-           #right { position: absolute; right: 0; top: 0; width: 50%; } 
+    <head>
+        <title>MultiToken</title>
+        <meta charset="utf-8">
+        <!-- Viewport Meta Tag -->
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- Latest compiled and minified Bootstrap CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <style>
+            .tab-pane {
+                border-left: 1px solid #ddd;
+                border-right: 1px solid #ddd;
+                border-bottom: 1px solid #ddd;
+                border-radius: 0px 0px 5px 5px;
+                padding: 10px;
+            }
+            .nav-tabs {
+                margin-bottom: 0;
+            }
         </style>
-	</head>
-	
-	<body>
-		<div class="container-fluid" id="left">
-			<h1>CREATE TOKEN</h1>
+    </head>
+    <body>
+		<!-- YOUR CONTENT STARTS HERE -->
+		
+        <div class="container-fluid">
 			<div class="form-group">
-				<label for="usr">TOKEN NAME:</label>
-	  			<input type="text" class="form-control" id="token_name">
+				<label for="multiTokenNetworkAddress">MultiToken Network Address</label>
+				<input type="text" class="form-control" id="multiTokenNetworkAddress" value="0x6D5246AC741EA76de42b75dc48A78CC6dC7c7593" placeholder="0x0000000000000000000000000000000000000000">
 			</div>
 			<div class="form-group">
-				<label for="usr">SYMBOL:</label>
-	  			<input type="text" class="form-control" id="symbol">
-	  		</div>
-
-	  		<div class="form-group">
-		  		<label class="container">Manageable
-					<input type="checkbox" id="manageable">
-					<span class="checkmark"></span>
-				</label>
-			</div>
-
-	  		<div class="form-group" id="drops">
-	  			<div class="form-group">
-					<div class="dropdown" id="drop1">
-						<button class="btn btn-default dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">Coin1 
-						<span class="caret"></span></button>
-						&nbsp;&nbsp;&nbsp;<input id="ex1" data-slider-id='ex1Slider' type="text" data-slider-min="1" data-slider-max="10" data-slider-step="1" data-slider-value="1"/>
-						<input type="text" class="form" name="init_amount" id="init_amount1">
-
-						<ul class="dropdown-menu" role="menu" aria-labelledby="menu1" name="ul_menu">
-							<li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="ulmenu_1_0xd26114cd6EE289AccF82350c8d8487fedB8A0C07">OMG</a></li>
-							<li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="ulmenu_1_0xe94327d07fc17907b4db788e5adf2ed424addff6">REP</a></li>
-							<li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="ulmenu_1_0xa74476443119A942dE498590Fe1f2454d7D4aC0d">GNT</a></li>
-							<li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="ulmenu_1_0x744d70fdbe2ba4cf95131626614a1763df805b9e">SNT</a></li>
-							<li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="ulmenu_1_0x0d8775f648430679a709e98d2b0cb6250d2887ef">BAT</a></li>
-							<li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="ulmenu_1_0x6810e776880c02933d47db1b9fc05908e5386b96">GNO</a></li> 
-						</ul>
-					</div>
-				</div>
-				<div class="form-group">
-					<div class="dropdown" id="drop2">
-						<button class="btn btn-default dropdown-toggle" type="button" id="menu2" data-toggle="dropdown">Coin2 
-						<span class="caret"></span></button>
-						&nbsp;&nbsp;&nbsp;<input id="ex2" data-slider-id='ex1Slider' type="text" data-slider-min="1" data-slider-max="10" data-slider-step="1" data-slider-value="1"/>
-						<input type="text" class="form" name="init_amount" id="init_amount2">
-
-						<ul class="dropdown-menu" role="menu" aria-labelledby="menu1" name="ul_menu">
-							<li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="ulmenu_2_0xd26114cd6EE289AccF82350c8d8487fedB8A0C07">OMG</a></li>
-							<li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="ulmenu_2_0xe94327d07fc17907b4db788e5adf2ed424addff6">REP</a></li>
-							<li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="ulmenu_2_0xa74476443119A942dE498590Fe1f2454d7D4aC0d">GNT</a></li>
-							<li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="ulmenu_2_0x744d70fdbe2ba4cf95131626614a1763df805b9e">SNT</a></li>
-							<li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="ulmenu_2_0x0d8775f648430679a709e98d2b0cb6250d2887ef">BAT</a></li>
-							<li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="ulmenu_2_0x6810e776880c02933d47db1b9fc05908e5386b96">GNO</a></li> 
-						</ul>
-					</div>		
-				</div>
-			</div>
-
-			<div class="form-group">
-				<button type="button" class="btn btn-info" id="add">+</button> 
+				<label for="bancorNetworkAddress">MultiBuyer Address</label>
+				<input type="text" class="form-control" id="bancorNetworkAddress" value="0xf20b9e713a33f61fa38792d2afaf1cd30339126a" placeholder="0x0000000000000000000000000000000000000000">
 			</div>
 			<div class="form-group">
-				<button type="button" class="btn btn-success" id="create">CREATE</button> 
+				<label for="multiBuyerAddress">MultiBuyer Address</label>
+				<input type="text" class="form-control" id="multiBuyerAddress" value="0xa960aBbb79ccBdA2e236De823b623a53c25F2783" placeholder="0x0000000000000000000000000000000000000000">
 			</div>
 			
-			<div class="form-group" id="init">
-				<div class="form-group">
-					<input type="text" class="form-control" id="contract_address">
-				</div>	
-				<div class="form-group">
-					<button type="button" class="btn btn-success" id="btn-init">INIT</button> 
+			<ul class="nav nav-tabs">
+				<li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#deployersTab">Deployers</a></li>
+				<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#multitokensTab">MultiTokens</a></li>
+			</ul>
+			<div class="tab-content">
+				<div id="deployersTab" class="tab-pane active visible">
+					<div class="form-group">
+						<div class="input-group mb-3">
+							<select class="custom-select" id="multiTokenDeployers">
+								<option selected>New</option>
+							</select>
+						</div>
+					</div>
+				</div>
+				<div id="multitokensTab" class="tab-pane">
+					<div class="form-group">
+						<div class="input-group mb-3">
+							<select class="custom-select" id="multiTokens">
+								<option selected>New</option>
+							</select>
+						</div>
+					</div>
+					<div class="form-group">
+						<table class="table" id="tokens">
+							<thead>
+								<tr>
+									<th scope="col">#</th>
+									<th scope="col">Symbol</th>
+									<th scope="col">Decimals</th>
+									<th scope="col">Balance</th>
+									<th scope="col">Weight</th>
+									<th scope="col">Address</th>
+								</tr>
+							</thead>
+							<tbody>
+							</tbody>
+						</table>
+						<!-- <button type="button" class="btn btn-success" id="bundle">Bundle</button><br/> -->
+						<!-- <button type="button" class="btn btn-warning" id="unbundle">Unbundle</button><br/> -->
+						
+						<div class="input-group mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text" id="basic-addon1">ETH</span>
+							</div>
+							<input type="text" class="form-control" placeholder="0.0" value="0.1" id="buy-for-eth-input">
+							<div class="input-group-append">
+								<button class="btn btn-outline-secondary" type="button" id="buy-for-eth">Buy</button>
+							</div>
+						</div>
+
+						<!-- <button type="button" class="btn btn-danger" id="sell-for-eth">Sell for ETH</button><br/> -->
+					</div>
 				</div>
 			</div>
-
 		</div>
 
-		<div class="container-fluid" id="right">
-			<h1>MANAGE TOKEN</h1>
-			<div class="form-group">
-				<input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for address.." title="Type in a name">
-				<span id="myInput_address" style="display:none"></span>
-				<ul id="myUL">
-				  <li><a id="0xFF045640f7f79D4D3b2c0cCd110ae4337DD83e80" href="#">FirstMultiToken</a></li>
-				  <li><a id="0x5C4fC01E5d687F1d2C627bA7DE3A59c33aEFaA35" href="#">SecondMultiToken</a></li>
-				</ul>
-			</div>
+		<div id="txModal" class="modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Transaction details</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <label for="tx_to">Contract address:</label>
+                        <div class="input-group mb-3">
+                            <input readonly class="form-control" id="tx_to" aria-describedby="basic-addon2">
+                            <div class="input-group-append">
+                                <button id="tx_to_copy" class="btn btn-outline-secondary" type="button">Copy</button>
+                            </div>
+                        </div>
+                        <label for="tx_value">Value (ETH):</label>
+                        <div class="input-group mb-3">
+                            <input readonly class="form-control" id="tx_value" aria-describedby="basic-addon2">
+                            <div class="input-group-append">
+                                <button id="tx_value_copy" class="btn btn-outline-secondary" type="button">Copy</button>
+                            </div>
+                        </div>
+                        <label for="tx_data">Data:</label>
+                        <div class="input-group mb-3">
+                            <textarea readonly rows="3" style="height:auto" class="form-control" id="tx_data" aria-describedby="basic-addon2"></textarea>
+                            <div class="input-group-append">
+                                <button id="tx_data_copy" class="btn btn-outline-secondary" type="button">Copy</button>
+                            </div>
+                        </div>
+                        <label for="tx_data">Gas:</label>
+                        <div class="input-group mb-3">
+                            <input readonly class="form-control" id="tx_gas" aria-describedby="basic-addon2">
+                            <div class="input-group-append">
+                                <button id="tx_gas_copy" class="btn btn-outline-secondary" type="button">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-			<div class="form-group">
-				<h3><label for="usr" id="balance">YOUR BALANCE: -- multiToken</label></h3>
-			</div>
-			<div class="form-group">
-				<label for="usr">AMOUNT</label>
-				<input type="text" class="form-control" id="amount">
-			</div>
+		<!-- YOUR CONTENT ENDS HERE -->
 
-			<div class="form-group">
-				<button type="button" class="btn btn-success mintburn" id="mint">MINT</button> 
-				<button type="button" class="btn btn-success mintburn" id="burn">BURN</button> 
-			</div>
+        <!-- JavaScript: placed at the end of the document so the pages load faster -->
 
-		</div>
+        <!-- jQuery library -->
+        <script src="https://code.jquery.com/jquery-3.1.1.min.js" crossorigin="anonymous"></script>
+
+        <!-- Popper -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+
+        <!-- Latest compiled and minified Bootstrap JavaScript -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+        <!-- Web3js library -->
+        <script src="./js/web3.min.js"></script>
+        <script src="./js/multitoken.js"></script>
 	</body>
 </html>
-
-<script>
-	function myFunction() {
-	    var input, filter, ul, li, a, i;
-	    input = document.getElementById("myInput");
-	    filter = input.value.toUpperCase();
-	    ul = document.getElementById("myUL");
-	    li = ul.getElementsByTagName("li");
-	    for (i = 0; i < li.length; i++) {
-	        a = li[i].getElementsByTagName("a")[0];
-	        if (a.innerHTML.toUpperCase().indexOf(filter) > -1) {
-	            li[i].style.display = "";
-	        } else {
-	            //li[i].style.display = "none";
-
-	        }
-	    }
-	}
-</script>
-
-<script type="text/javascript" src="./js/action.js"></script>
-<script type="text/javascript" src="./js/create.js"></script>
-<script type="text/javascript" src="./js/mintburn.js"></script>
