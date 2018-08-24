@@ -134,12 +134,18 @@ window.addEventListener('load', async function() {
                 return tokenContract.methods.symbol().call();
             })
         );
+        const allTokensDecimals = await Promise.all(
+            allTokens.map(token => {
+                const tokenContract = new web3js.eth.Contract(detailedERC20ABI, token);
+                return tokenContract.methods.decimals().call();
+            })
+        );
         const allTokensBalances = (await Promise.all(
             allTokens.map(token => {
                 const tokenContract = new web3js.eth.Contract(detailedERC20ABI, token);
                 return tokenContract.methods.balanceOf(multitokenContract.options.address).call();
             })
-        )).map(b => web3js.utils.toBN(b));
+        )).map((b,i) => b / 10**allTokensDecimals[i]);
 
         // Get token prices to determine amounts
         const json = await $.getJSON('https://api.bancor.network/0.1/currencies/tokens?limit=100&skip=0&fromCurrencyCode=ETH&includeTotal=false&orderBy=liquidityDepth&sortOrder=desc');
@@ -149,17 +155,17 @@ window.addEventListener('load', async function() {
         }
 
         const multitokenCapitalization = allTokensBalances
-            .map((b,i) => b.mul(tokenPriceETH[allTokensNames[i]]))
-            .reduce((a, b) => a.add(b));
+            .map((b,i) => b * tokenPriceETH[allTokensNames[i]])
+            .reduce((a, b) => a + b);
 
-        const value = web3js.utils.toBN(web3js.utils.toWei($('#buy-for-eth-input').val()));
+        const value = web3js.utils.toWei($('#buy-for-eth-input').val());
         const amounts = [value];
         const minReturns = [0];
         const paths = [bancorTokens.ETH, bancorConverters.BNT, bancorTokens.BNT];
         const pathStartIndexes = [0];
         const firstChange = bancorNetworkContract.methods.convertForMultiple(paths, pathStartIndexes, amounts, minReturns, multiBuyerContract.options.address).encodeABI().substr(2);
         for (let i = 0; i < allTokens.length; i++) {
-            const amount = value.mul(allTokensBalances[i]).mul(allTokensNames[i]).div(multitokenCapitalization);
+            const amount = value * allTokensBalances[i] * tokenPriceETH[allTokensNames[i]] / multitokenCapitalization;
             amounts.push(amount);
             minReturns.push(amount / tokenPriceETH[allTokensNames[i]] * 0.98); // -2%
             pathStartIndexes.push(paths.length);
@@ -169,16 +175,38 @@ window.addEventListener('load', async function() {
         }
         const otherChanges = bancorNetworkContract.methods.convertForMultiple(paths, pathStartIndexes, amounts, minReturns, multiBuyerContract.options.address).encodeABI().substr(2);
 
-        const data = multiBuyerContract.methods.buy(
-            multitokenContract.options.address,
-            0,
-            bancorTokens.BNT,
-            [bancorNetworkContract.options.address, bancorNetworkContract.options.address],
-            '0x' + firstChange + otherChanges,
-            [0, firstChange.length/2, firstChange.length/2 + otherChanges.length/2],
-            amounts
-        ).encodeABI();
-        console.log('data: ' + data);
+        let preTx;
+        if (await multitokenContract.methods.totalSupply().call() == 0) {
+            preTx = multiBuyerContract.methods.buyFirstTokens(
+                multitokenContract.options.address,
+                bancorTokens.BNT,
+                [bancorNetworkContract.options.address, bancorNetworkContract.options.address],
+                '0x' + firstChange + otherChanges,
+                [0, firstChange.length/2, firstChange.length/2 + otherChanges.length/2],
+                amounts
+            );
+        } else {
+            preTx = await multiBuyerContract.methods.buy(
+                multitokenContract.options.address,
+                0,
+                bancorTokens.BNT,
+                [bancorNetworkContract.options.address, bancorNetworkContract.options.address],
+                '0x' + firstChange + otherChanges,
+                [0, firstChange.length/2, firstChange.length/2 + otherChanges.length/2],
+                amounts
+            );
+        }
+
+        if (account) {
+            const tx = await preTx.send({ from: account });
+            console.log(tx);
+        } else {
+            $('#tx_to').val(multiBuyerContract.options.address);
+            $('#tx_value').val(value);
+            $('#tx_data').val(preTx.encodeABI());
+            $('#tx_gas').val(await preTx.estimateGas());
+            $('#txModal').modal('show');
+        }
 
         // function convert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn) public payable returns (uint256)
         // function convertForMultiple(IERC20Token[] _paths, uint256[] _pathStartIndex, uint256[] _amounts, uint256[] _minReturns, address _for) public payable returns (uint256[])
