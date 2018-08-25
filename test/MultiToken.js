@@ -43,7 +43,7 @@ contract('MultiToken', function ([_, wallet1, wallet2, wallet3, wallet4, wallet5
     //             "0x4CEdA7906a5Ed2179785Cd3A40A69ee8bc99C466", // AION
     //             "0x1f573d6fb3f13d689ff844b4ce37794d79a7ff1c", // BNT
     //             "0xbf2179859fc6d5bee9bf9158632dc51678a4100e", // ELF
-    //         ], 
+    //         ],
     //         [
     //             3,
     //             2,

@@ -28,7 +28,7 @@ contract MultiSeller is CanReclaimToken {
     {
         require(_mtkn.tokensCount() == _exchanges.length, "sell: _mtkn should have the same tokens count as _exchanges");
         require(_datasIndexes.length == _exchanges.length + 1, "sell: _datasIndexes should start with 0 and end with LENGTH");
-        
+
         _mtkn.transferFrom(msg.sender, this, _amount);
         _mtkn.unbundle(this, _amount);
 
@@ -43,7 +43,7 @@ contract MultiSeller is CanReclaimToken {
             for (uint j = _datasIndexes[i]; j < _datasIndexes[i + 1]; j++) {
                 data[j - _datasIndexes[i]] = _datas[j];
             }
-            
+
             token.approve(_exchanges[i], token.balanceOf(this));
             require(_exchanges[i].call(data), "sell: exchange arbitrary call failed");
         }

@@ -16,7 +16,7 @@ contract MultiTokenNetwork is Pausable {
     function multitokensCount() public view returns(uint256) {
         return multitokens.length;
     }
-    
+
     function allMultitokens() public view returns(address[]) {
         return multitokens;
     }
@@ -27,6 +27,18 @@ contract MultiTokenNetwork is Pausable {
             balances[i] = ERC20(multitokens[i]).balanceOf(wallet);
         }
         return balances;
+    }
+
+    function deleteMultitoken(uint index) public onlyOwner {
+        require(index < multitokens.length, "deleteMultitoken: index out of range");
+        if (index != multitokens.length - 1) {
+            multitokens[index] = multitokens[multitokens.length - 1];
+        }
+        multitokens.length -= 1;
+    }
+
+    function pauseMultitoken(uint index) public onlyOwner {
+        Pausable(multitokens[index]).pause();
     }
 
     function setDeployer(uint256 index, IDeployer deployer) public onlyOwner whenNotPaused {

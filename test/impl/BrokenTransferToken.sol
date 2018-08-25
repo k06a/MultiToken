@@ -6,7 +6,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/DetailedERC20.sol";
 
 
 contract BrokenTransferToken is MintableToken, PausableToken, DetailedERC20 {
-    
+
     constructor(string _symbol) public
         DetailedERC20("BrokenTransferToken", _symbol, 18)
     {

@@ -125,6 +125,7 @@ window.addEventListener('load', async function() {
         const bancorNetworkContract = new web3js.eth.Contract(bancorNetworkABI, $('#bancorNetworkAddress').val());
         const multiBuyerContract = new web3js.eth.Contract(multiBuyerABI, $('#multiBuyerAddress').val());
         const multitokenContract = new web3js.eth.Contract(multiTokenABI, $('#multiTokens').val());
+        const multitokenTotalSupply = await multitokenContract.methods.totalSupply().call();
 
         // Get token names and amounts
         const allTokens = await multitokenContract.methods.allTokens().call();
@@ -165,7 +166,7 @@ window.addEventListener('load', async function() {
         const pathStartIndexes = [0];
         const firstChange = bancorNetworkContract.methods.convertForMultiple(paths, pathStartIndexes, amounts, minReturns, multiBuyerContract.options.address).encodeABI().substr(2);
         for (let i = 0; i < allTokens.length; i++) {
-            const amount = value * allTokensBalances[i] * tokenPriceETH[allTokensNames[i]] / multitokenCapitalization;
+            const amount = value * allTokensBalances[i] * tokenPriceETH[allTokensNames[i]] / multitokenCapitalization / tokenPriceETH.BNT * 0.995);
             amounts.push(amount);
             minReturns.push(amount / tokenPriceETH[allTokensNames[i]] * 0.98); // -2%
             pathStartIndexes.push(paths.length);
@@ -176,14 +177,14 @@ window.addEventListener('load', async function() {
         const otherChanges = bancorNetworkContract.methods.convertForMultiple(paths, pathStartIndexes, amounts, minReturns, multiBuyerContract.options.address).encodeABI().substr(2);
 
         let preTx;
-        if (await multitokenContract.methods.totalSupply().call() == 0) {
+        if (multitokenTotalSupply == 0) {
             preTx = multiBuyerContract.methods.buyFirstTokens(
                 multitokenContract.options.address,
                 bancorTokens.BNT,
                 [bancorNetworkContract.options.address, bancorNetworkContract.options.address],
                 '0x' + firstChange + otherChanges,
                 [0, firstChange.length/2, firstChange.length/2 + otherChanges.length/2],
-                amounts
+                [value, 0]
             );
         } else {
             preTx = await multiBuyerContract.methods.buy(
@@ -193,7 +194,7 @@ window.addEventListener('load', async function() {
                 [bancorNetworkContract.options.address, bancorNetworkContract.options.address],
                 '0x' + firstChange + otherChanges,
                 [0, firstChange.length/2, firstChange.length/2 + otherChanges.length/2],
-                amounts
+                [value, 0]
             );
         }
 

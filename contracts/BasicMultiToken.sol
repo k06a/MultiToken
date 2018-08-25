@@ -12,10 +12,16 @@ contract BasicMultiToken is Pausable, StandardToken, DetailedERC20, ERC1003Token
     using CheckedERC20 for ERC20;
 
     ERC20[] public tokens;
+    uint internal inLendingMode;
 
     event Bundle(address indexed who, address indexed beneficiary, uint256 value);
     event Unbundle(address indexed who, address indexed beneficiary, uint256 value);
-    
+
+    modifier notInLendingMode {
+        require(inLendingMode == 0, "Operation can't be performed while lending");
+        _;
+    }
+
     constructor() public DetailedERC20("", "", 0) {
     }
 
@@ -32,12 +38,12 @@ contract BasicMultiToken is Pausable, StandardToken, DetailedERC20, ERC1003Token
         tokens = _tokens;
     }
 
-    function bundleFirstTokens(address _beneficiary, uint256 _amount, uint256[] _tokenAmounts) public {
+    function bundleFirstTokens(address _beneficiary, uint256 _amount, uint256[] _tokenAmounts) public whenNotPaused notInLendingMode {
         require(totalSupply_ == 0, "This method can be used with zero total supply only");
         _bundle(_beneficiary, _amount, _tokenAmounts);
     }
 
-    function bundle(address _beneficiary, uint256 _amount) public {
+    function bundle(address _beneficiary, uint256 _amount) public whenNotPaused notInLendingMode {
         require(totalSupply_ != 0, "This method can be used with non zero total supply only");
         uint256[] memory tokenAmounts = new uint256[](tokens.length);
         for (uint i = 0; i < tokens.length; i++) {
@@ -46,11 +52,11 @@ contract BasicMultiToken is Pausable, StandardToken, DetailedERC20, ERC1003Token
         _bundle(_beneficiary, _amount, tokenAmounts);
     }
 
-    function unbundle(address _beneficiary, uint256 _value) public {
+    function unbundle(address _beneficiary, uint256 _value) public notInLendingMode {
         unbundleSome(_beneficiary, _value, tokens);
     }
 
-    function unbundleSome(address _beneficiary, uint256 _value, ERC20[] _tokens) public {
+    function unbundleSome(address _beneficiary, uint256 _value, ERC20[] _tokens) public notInLendingMode {
         require(_tokens.length > 0, "Array of tokens can't be empty");
 
         uint256 totalSupply = totalSupply_;
@@ -68,13 +74,11 @@ contract BasicMultiToken is Pausable, StandardToken, DetailedERC20, ERC1003Token
         }
     }
 
-    function _bundle(address _beneficiary, uint256 _amount, uint256[] _tokenAmounts) internal whenNotPaused {
+    function _bundle(address _beneficiary, uint256 _amount, uint256[] _tokenAmounts) internal {
         require(tokens.length == _tokenAmounts.length, "Lenghts of tokens and _tokenAmounts array should be equal");
 
         for (uint i = 0; i < tokens.length; i++) {
-            uint256 prevBalance = tokens[i].balanceOf(this);
-            tokens[i].transferFrom(msg.sender, this, _tokenAmounts[i]); // Can't use require because not all ERC20 tokens return bool
-            require(tokens[i].balanceOf(this) == prevBalance.add(_tokenAmounts[i]), "Invalid token behavior");
+            tokens[i].checkedTransferFrom(msg.sender, this, _tokenAmounts[i]); // Can't use require because not all ERC20 tokens return bool
         }
 
         totalSupply_ = totalSupply_.add(_amount);
@@ -88,7 +92,9 @@ contract BasicMultiToken is Pausable, StandardToken, DetailedERC20, ERC1003Token
     function lend(address _to, ERC20 _token, uint256 _amount, address _target, bytes _data) public payable {
         uint256 prevBalance = _token.balanceOf(this);
         _token.transfer(_to, _amount);
+        inLendingMode += 1;
         require(caller_.makeCall.value(msg.value)(_target, _data), "lend: arbitrary call failed");
+        inLendingMode -= 1;
         require(_token.balanceOf(this) >= prevBalance, "lend: lended token must be refilled");
     }
 
