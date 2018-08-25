@@ -10,6 +10,9 @@ const bancorConverters = {
     'BNT': '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C',
     'AION': '0x73fa2b855be96ab3c73f375b8ec777226efa3845',
     'POA': '0x564c07255afe5050d82c8816f78da13f2b17ac6d',
+    'GNO': '0x6810e776880c02933d47db1b9fc05908e5386b96',
+    'WINGS': '0x667088b212ce3d06a1b553a7221E1fD19000d9aF',
+    'STX': '0x006bea43baa3f7a6f765f14f10a1a1b08334ef45'
 };
 
 const bancorTokens = {
@@ -17,6 +20,9 @@ const bancorTokens = {
     'BNT': '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C',
     'AION': '0x4CEdA7906a5Ed2179785Cd3A40A69ee8bc99C466',
     'POA': '0x6758b7d441a9739b98552b373703d8d3d14f9e62',
+    'GNO': '0xd7eb9db184da9f099b84e2f86b1da1fe6b305b3d',
+    'WINGS': '0xa6ab3c8ae51962f4582db841de6b0a092041461e',
+    'STX': '0x006bea43baa3f7a6f765f14f10a1a1b08334ef45'
 };
 
 var account;
@@ -166,7 +172,7 @@ window.addEventListener('load', async function() {
         const pathStartIndexes = [0];
         const firstChange = bancorNetworkContract.methods.convertForMultiple(paths, pathStartIndexes, amounts, minReturns, multiBuyerContract.options.address).encodeABI().substr(2);
         for (let i = 0; i < allTokens.length; i++) {
-            const amount = value * allTokensBalances[i] * tokenPriceETH[allTokensNames[i]] / multitokenCapitalization / tokenPriceETH.BNT * 0.995);
+            const amount = value * allTokensBalances[i] * tokenPriceETH[allTokensNames[i]] / multitokenCapitalization / tokenPriceETH.BNT * 0.995;
             amounts.push(amount);
             minReturns.push(amount / tokenPriceETH[allTokensNames[i]] * 0.98); // -2%
             pathStartIndexes.push(paths.length);
