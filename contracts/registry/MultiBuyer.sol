@@ -31,6 +31,7 @@ contract MultiBuyer is CanReclaimToken {
             }
 
             if (_throughToken != address(0) && i > 0) {
+                _throughToken.approve(_exchanges[i], 0);
                 _throughToken.approve(_exchanges[i], _throughToken.balanceOf(this));
             }
             require(_exchanges[i].call.value(_values[i])(data), "buy: exchange arbitrary call failed");
@@ -43,6 +44,7 @@ contract MultiBuyer is CanReclaimToken {
         uint256 bestAmount = uint256(-1);
         for (i = _mtkn.tokensCount(); i > 0; i--) {
             ERC20 token = _mtkn.tokens(i - 1);
+            token.approve(_mtkn, 0);
             token.approve(_mtkn, token.balanceOf(this));
 
             uint256 amount = j.mul(token.balanceOf(this)).div(token.balanceOf(_mtkn));
@@ -79,6 +81,7 @@ contract MultiBuyer is CanReclaimToken {
             }
 
             if (_throughToken != address(0) && i > 0) {
+                _throughToken.approve(_exchanges[i], 0);
                 _throughToken.approve(_exchanges[i], _throughToken.balanceOf(this));
             }
             require(_exchanges[i].call.value(_values[i])(data), "buy: exchange arbitrary call failed");
@@ -92,6 +95,7 @@ contract MultiBuyer is CanReclaimToken {
         for (i = 0; i < tokensCount; i++) {
             ERC20 token = _mtkn.tokens(i);
             amounts[i] = token.balanceOf(this);
+            token.approve(_mtkn, 0);
             token.approve(_mtkn, amounts[i]);
         }
 
