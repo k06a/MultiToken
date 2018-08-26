@@ -86,8 +86,10 @@ contract MultiBuyer is CanReclaimToken {
 
             if (_throughToken != address(0) && i > 0) {
                 _throughToken.transfer(_exchanges[i], _values[i]);
+                require(_exchanges[i].call(data), "buy: exchange arbitrary call failed");
+            } else {
+                require(_exchanges[i].call.value(_values[i])(data), "buy: exchange arbitrary call failed");
             }
-            require(_exchanges[i].call.value(_values[i])(data), "buy: exchange arbitrary call failed");
         }
 
         j = _mtkn.totalSupply(); // optimization totalSupply
@@ -183,8 +185,10 @@ contract MultiBuyer is CanReclaimToken {
 
             if (_throughToken != address(0) && i > 0) {
                 _throughToken.transfer(_exchanges[i], _values[i]);
+                require(_exchanges[i].call(data), "buy: exchange arbitrary call failed");
+            } else {
+                require(_exchanges[i].call.value(_values[i])(data), "buy: exchange arbitrary call failed");
             }
-            require(_exchanges[i].call.value(_values[i])(data), "buy: exchange arbitrary call failed");
         }
 
         uint tokensCount = _mtkn.tokensCount();

@@ -21,8 +21,8 @@ const bancorConverters = {
     'BNT': '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C',
     'AION': '0x73fa2b855be96ab3c73f375b8ec777226efa3845',
     'POA20': '0x564c07255afe5050d82c8816f78da13f2b17ac6d',
-    'GNO': '0x6810e776880c02933d47db1b9fc05908e5386b96',
-    'WINGS': '0x667088b212ce3d06a1b553a7221E1fD19000d9aF',
+    'GNO': '0xd7eB9DB184DA9f099B84e2F86b1da1Fe6b305B3d',
+    'WINGS': '0xa6ab3c8ae51962f4582db841de6b0a092041461e',
     'STX': '0x006bea43baa3f7a6f765f14f10a1a1b08334ef45'
 };
 
@@ -31,8 +31,8 @@ const bancorTokens = {
     'BNT': '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C',
     'AION': '0x4CEdA7906a5Ed2179785Cd3A40A69ee8bc99C466',
     'POA20': '0x6758b7d441a9739b98552b373703d8d3d14f9e62',
-    'GNO': '0xd7eb9db184da9f099b84e2f86b1da1fe6b305b3d',
-    'WINGS': '0xa6ab3c8ae51962f4582db841de6b0a092041461e',
+    'GNO': '0x6810e776880c02933d47db1b9fc05908e5386b96',
+    'WINGS': '0x667088b212ce3d06a1b553a7221E1fD19000d9aF',
     'STX': '0x006bea43baa3f7a6f765f14f10a1a1b08334ef45'
 };
 
@@ -152,18 +152,28 @@ window.addEventListener('load', async function() {
                 return tokenContract.methods.symbol().call();
             })
         );
+        console.log('allTokensNames = ' + allTokensNames);
+
         const allTokensPowers = (await Promise.all(
             allTokens.map(token => {
                 const tokenContract = new web3js.eth.Contract(detailedERC20ABI, token);
                 return tokenContract.methods.decimals().call();
             })
         )).map((b,i) => web3js.utils.toBN(10 ** b));
+        console.log('allTokensPowers = ' + allTokensPowers.map(a => a.toString()));
+
         const allTokensBalances = (await Promise.all(
             allTokens.map(token => {
                 const tokenContract = new web3js.eth.Contract(detailedERC20ABI, token);
                 return tokenContract.methods.balanceOf(multitokenContract.options.address).call();
             })
         )).map((b,i) => web3js.utils.toBN(b));
+        console.log('allTokensBalances = ' + allTokensBalances.map(a => a.toString()));
+
+        const allTokensWeights = (await multitokenContract.methods.allWeights().call()).map(w => Number.parseInt(w));
+        const allTokensWeightsSum = allTokensWeights.reduce((a, b) => a + b);
+        console.log('allTokensWeights = ', allTokensWeights);
+        console.log('allTokensWeightsSum = ' + allTokensWeightsSum);
 
         // Get token prices to determine amounts
         const json = await $.getJSON('https://api.bancor.network/0.1/currencies/tokens?limit=100&skip=0&fromCurrencyCode=ETH&includeTotal=false&orderBy=liquidityDepth&sortOrder=desc');
@@ -199,26 +209,21 @@ window.addEventListener('load', async function() {
             if (tokenName == 'BNT') {
                 continue;
             }
-            const tokenCapitalizationWei = allTokensBalances[i].mul(tokenPriceETH[tokenName]).mul(_18).div(_10).div(allTokensPowers[i]);
-            const amount = bntValue.mul(tokenCapitalizationWei).div(multitokenCapitalizationWei);
+            let amount = 0;
+            if (!multitokenCapitalizationWei.isZero()) {
+                const tokenCapitalizationWei = allTokensBalances[i].mul(tokenPriceETH[tokenName]).mul(_18).div(_10).div(allTokensPowers[i]);
+                amount = bntValue.mul(tokenCapitalizationWei).div(multitokenCapitalizationWei);
+            } else {
+                amount = bntValue.muln(allTokensWeights[i]).divn(allTokensWeightsSum);
+            }
             amounts.push(amount);
             minReturns.push(amount.mul(tokenPriceETH.BNT).mul(allTokensPowers[i]).div(_18).div(tokenPriceETH[tokenName]).muln(98).divn(100)); // -2%
             pathStartIndexes.push(paths.length);
-            if (bancorConverters[tokenName] == bancorTokens[tokenName]) {
-                paths.push(
-                    bancorTokens.BNT,
-                    bancorConverters[tokenName],
-                    bancorTokens[tokenName]
-                );
-            } else {
-                paths.push(
-                    bancorTokens.BNT,
-                    bancorConverters[tokenName],
-                    bancorConverters[tokenName],
-                    bancorConverters[tokenName],
-                    bancorTokens[tokenName]
-                );
-            }
+            paths.push(
+                bancorTokens.BNT,
+                bancorConverters[tokenName],
+                bancorTokens[tokenName]
+            );
         }
         console.log('convertForMultiple', paths, pathStartIndexes, amounts.map(a => a.toString()), minReturns.map(a => a.toString()));
         const otherChanges = bancorNetworkContract.methods.convertForMultiple(paths, pathStartIndexes, amounts, minReturns, multiBuyerContract.options.address).encodeABI().substr(2);
