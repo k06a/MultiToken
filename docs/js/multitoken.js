@@ -204,7 +204,21 @@ window.addEventListener('load', async function() {
             amounts.push(amount);
             minReturns.push(amount.mul(tokenPriceETH.BNT).mul(allTokensPowers[i]).div(_18).div(tokenPriceETH[tokenName]).muln(98).divn(100)); // -2%
             pathStartIndexes.push(paths.length);
-            paths.push(bancorTokens.BNT, bancorConverters[tokenName], bancorTokens[tokenName]);
+            if (bancorConverters[tokenName] == bancorTokens[tokenName]) {
+                paths.push(
+                    bancorTokens.BNT,
+                    bancorConverters[tokenName],
+                    bancorTokens[tokenName]
+                );
+            } else {
+                paths.push(
+                    bancorTokens.BNT,
+                    bancorConverters[tokenName],
+                    bancorConverters[tokenName],
+                    bancorConverters[tokenName],
+                    bancorTokens[tokenName]
+                );
+            }
         }
         console.log('convertForMultiple', paths, pathStartIndexes, amounts.map(a => a.toString()), minReturns.map(a => a.toString()));
         const otherChanges = bancorNetworkContract.methods.convertForMultiple(paths, pathStartIndexes, amounts, minReturns, multiBuyerContract.options.address).encodeABI().substr(2);
