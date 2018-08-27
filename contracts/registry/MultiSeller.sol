@@ -21,10 +21,10 @@ contract MultiSeller is CanReclaimToken {
         uint256 _amount,
         address[] _exchanges,
         bytes _datas,
-        uint[] _datasIndexes // including 0 and LENGTH values
+        uint[] _datasIndexes, // including 0 and LENGTH values
+        address _for
     )
         public
-        payable
     {
         require(_mtkn.tokensCount() == _exchanges.length, "sell: _mtkn should have the same tokens count as _exchanges");
         require(_datasIndexes.length == _exchanges.length + 1, "sell: _datasIndexes should start with 0 and end with LENGTH");
@@ -35,7 +35,7 @@ contract MultiSeller is CanReclaimToken {
         for (uint i = 0; i < _exchanges.length; i++) {
             ERC20 token = _mtkn.tokens(i);
             if (_exchanges[i] == 0) {
-                token.transfer(msg.sender, token.balanceOf(this));
+                token.transfer(_for, token.balanceOf(this));
                 continue;
             }
 
@@ -48,6 +48,6 @@ contract MultiSeller is CanReclaimToken {
             require(_exchanges[i].call(data), "sell: exchange arbitrary call failed");
         }
 
-        msg.sender.transfer(address(this).balance);
+        _for.transfer(address(this).balance);
     }
 }

@@ -35,6 +35,10 @@
 			<div class="form-group">
 				<label for="multiBuyerAddress">MultiBuyer Address</label>
 				<input type="text" class="form-control" id="multiBuyerAddress" value="0x6c571b8B19c84060e8405d79cb980A5ABA9FE7a1" placeholder="0x0000000000000000000000000000000000000000">
+            </div>
+            <div class="form-group">
+				<label for="multiSellerAddress">MultiSeller Address</label>
+				<input type="text" class="form-control" id="multiSellerAddress" value="0xfef44414ebc9d4bfba3bd986a12fcc23bdda2302" placeholder="0x0000000000000000000000000000000000000000">
 			</div>
 			
 			<ul class="nav nav-tabs">
@@ -84,6 +88,16 @@
 							<input type="text" class="form-control" placeholder="0.0" value="0.1" id="buy-for-eth-input">
 							<div class="input-group-append">
 								<button class="btn btn-outline-secondary" type="button" id="buy-for-eth">Buy</button>
+							</div>
+                        </div>
+                        
+                        <div class="input-group mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text" id="basic-addon1">MTKN</span>
+							</div>
+							<input type="text" class="form-control" placeholder="0.0" value="1000000000000000000" id="sell-for-eth-input">
+							<div class="input-group-append">
+								<button class="btn btn-outline-secondary" type="button" id="sell-for-eth">Sell</button>
 							</div>
 						</div>
 
