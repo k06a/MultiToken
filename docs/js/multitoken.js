@@ -28,10 +28,23 @@ const bancorTokens = {
     'BAT': '0x0d8775f648430679a709e98d2b0cb6250d2887ef',
     'STORM': '0xd0a4b8946cb52f0661273bfbc6fd0e0c75fc6433',
     'J8T': '0x0d262e5dc4a06a0f1c90ce79c7a60c09dfc884e4',
-    'BBO': '0x84f7c44b6fed1080f647e354d552595be2cc602f'
+    'BBO': '0x84f7c44b6fed1080f647e354d552595be2cc602f',
+    'POE': '0x0e0989b1f9b8a38983c2ba8053269ca62ec9b195',
+    'VEE': '0x340d2bde5eb28c1eed91b2f790723e3b160613b7',
+    'ATS': '0x2dAEE1AA61D60A252DC80564499A69802853583A',
+    'SNT': '0x744d70fdbe2ba4cf95131626614a1763df805b9e',
+    'MFT': '0xdf2c7238198ad8b389666574f2d8bc411a4b7428',
+    'RVT': '0x3d1ba9be9f66b8ee101911bc36d3fb562eac2244',
+    'SCL': '0xd7631787b4dcc87b1254cfd1e5ce48e96823dee8',
+    'WAX': '0x39bb259f66e1c59d5abef88375979b4d20d98022',
+    'ENJ': '0xf629cbd94d3791c9250152bd8dfbdf380e2a3b9c',
+    'EDG': '0x08711d3b02c8758f2fb3ab4e80228418a7f8e39c',
+    'DBET': '0x9b68bfae21df5a510931a262cecf63f41338f264',
+    'BETR': '0x763186eb8d4856d536ed4478302971214febc6a9',
+    'ESZ': '0xe8a1df958be379045e2b46a31a98b93a2ecdfded'
 };
 
-const bancorConverters = {
+const bancorRelays = {
     'ETH': '0xc0829421C1d260BD3cB3E0F06cfE2D52db2cE315',
     'BNT': '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C',
     'AION': '0x73fa2b855be96ab3c73f375b8ec777226efa3845',
@@ -42,7 +55,20 @@ const bancorConverters = {
     'BAT': '0x131da075a2832549128e93acc2b54174045232cf',
     'STORM': '0xcad4da66e00fdecabec137a24e12af8edf303a1d',
     'J8T': '0x8e00bacd7d8265d8f3f9d5b4fbd7f6b0b0c46f36',
-    'BBO': '0x980b4118dab781829df80d7912d70b059a280dad'
+    'BBO': '0x980b4118dab781829df80d7912d70b059a280dad',
+    'POE': '0xa5f2a49aafa052e28a50a575cd9e7488fa598e78',
+    'VEE': '0xc9c3a465380bfaac486c89ff7d5f60cc275d4e08',
+    'ATS': '0x1d75ebc72f4805e9c9918b36a8969b2e3847c9fb',
+    'SNT': '0xa3b3c5a8b22c044d5f2d372f628245e2106d310d',
+    'MFT': '0xe3cb9c37c2e9eaaf152f47ef064e583b1efb5967',
+    'RVT': '0x5039f60594ffa3f1a5acbe85e1ebe12dc8da7c5c',
+    'SCL': '0xfceb45cf070b277fede520c5539ae204bc1d493e',
+    'WAX': '0x67563e7a0f13642068f6f999e48c690107a4571f',
+    'ENJ': '0xf3ad2cbc4276eb4b0fb627af0059cfce094e20a1',
+    'EDG': '0xf95dd0fc6df64b2f149afa9219579e0f850bcd4d',
+    'DBET': '0xfe9e6111e45a6066374bf33e831e80b1949a9faa',
+    'BETR': '0x679f601f0deb53c2db0c8c26369fdcba5fd753cf',
+    'ESZ': '0xa2020e324c365d05e87cf25552e6e6734260b089'
 };
 
 var account;
@@ -104,7 +130,7 @@ window.addEventListener('load', async function() {
         const allMultitokens = await networkContract.methods.allMultitokens().call();
         console.log('Multitokens: ', allMultitokens);
         $('#multiTokens').html(allMultitokens.map(
-            (mt,i) => `<option${i?'':' selected'}>${mt}</option>`).join() + '<option>New</option>'
+            (mt,i) => `<option${i?'':' selected'}>${mt}</option>`).join()
         );
         $('#multiTokens').triggerHandler('change');
     });
@@ -214,7 +240,7 @@ window.addEventListener('load', async function() {
         {
             const amount = value;
             const minReturn = bntAmount;
-            const path = [bancorTokens.ETH, bancorConverters.BNT, bancorTokens.BNT];
+            const path = [bancorTokens.ETH, bancorRelays.BNT, bancorTokens.BNT];
             console.log('сonvert', path, amount.toString(), minReturn.toString());
             const data = bancorNetworkContract.methods.convert(path, amount, minReturn).encodeABI().substr(2);
 
@@ -239,7 +265,7 @@ window.addEventListener('load', async function() {
             const minReturn = amount.mul(tokenPriceETH.BNT).mul(allTokensPowers[i]).div(_18).div(tokenPriceETH[tokenName]).muln(99).divn(100); // -1%
             const path = [
                 bancorTokens.BNT,
-                bancorConverters[tokenName],
+                bancorRelays[tokenName],
                 bancorTokens[tokenName]
             ];
             console.log('claimAndConvert', path, amount.toString(), minReturn.toString());
@@ -346,7 +372,7 @@ window.addEventListener('load', async function() {
             bntAmount = bntAmount.add(amount.mul(tokenPriceETH[tokenName]).div(tokenPriceETH.BNT));
             const path = [
                 bancorTokens[tokenName],
-                bancorConverters[tokenName],
+                bancorRelays[tokenName],
                 bancorTokens.BNT,
             ];
             const minReturn = 1;
@@ -363,7 +389,7 @@ window.addEventListener('load', async function() {
             const amount = bntAmount.muln(99).divn(100); // -1%
             const path = [
                 bancorTokens.BNT,
-                bancorConverters.BNT,
+                bancorRelays.BNT,
                 bancorTokens.ETH
             ];
             const minReturn = amount.mul(tokenPriceETH.BNT).div(_10).muln(98).divn(100); // -2%
