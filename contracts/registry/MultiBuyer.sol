@@ -31,12 +31,12 @@ contract MultiBuyer is CanReclaimToken {
             }
 
             if (_throughToken != address(0) && i > 0) {
-                _throughToken.approve(_exchanges[i], 0);
-                _throughToken.approve(_exchanges[i], _throughToken.balanceOf(this));
-            }
-            require(_exchanges[i].call.value(_values[i])(data), "buy: exchange arbitrary call failed");
-            if (_throughToken != address(0)) {
-                _throughToken.approve(_exchanges[i], 0);
+                if (_throughToken.allowance(this, _exchanges[i]) == 0) {
+                    _throughToken.approve(_exchanges[i], uint256(-1));
+                }
+                require(_exchanges[i].call(data), "buy: exchange arbitrary call failed");
+            } else {
+                require(_exchanges[i].call.value(_values[i])(data), "buy: exchange arbitrary call failed");
             }
         }
 
@@ -136,12 +136,12 @@ contract MultiBuyer is CanReclaimToken {
             }
 
             if (_throughToken != address(0) && i > 0) {
-                _throughToken.approve(_exchanges[i], 0);
-                _throughToken.approve(_exchanges[i], _throughToken.balanceOf(this));
-            }
-            require(_exchanges[i].call.value(_values[i])(data), "buy: exchange arbitrary call failed");
-            if (_throughToken != address(0)) {
-                _throughToken.approve(_exchanges[i], 0);
+                if (_throughToken.allowance(this, _exchanges[i]) == 0) {
+                    _throughToken.approve(_exchanges[i], uint256(-1));
+                }
+                require(_exchanges[i].call(data), "buy: exchange arbitrary call failed");
+            } else {
+                require(_exchanges[i].call.value(_values[i])(data), "buy: exchange arbitrary call failed");
             }
         }
 

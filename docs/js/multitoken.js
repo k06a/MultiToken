@@ -199,7 +199,7 @@ window.addEventListener('load', async function() {
 
         const value = web3js.utils.toBN(web3js.utils.toWei($('#buy-for-eth-input').val()));
         console.log('value = ' + value.toString());
-        const bntAmount = value.mul(_10).div(tokenPriceETH.BNT).muln(98).divn(100); // -2%
+        const bntAmount = value.mul(_10).div(tokenPriceETH.BNT).muln(99).divn(100); // -1%
         console.log('bntValue = ' + bntAmount.toString());
 
         const targets = [];
@@ -211,7 +211,7 @@ window.addEventListener('load', async function() {
             const amount = value;
             const minReturn = bntAmount;
             const path = [bancorTokens.ETH, bancorConverters.BNT, bancorTokens.BNT];
-            console.log('convert', path, amount.toString(), minReturn.toString());
+            console.log('сonvert', path, amount.toString(), minReturn.toString());
             const data = bancorNetworkContract.methods.convert(path, amount, minReturn).encodeABI().substr(2);
 
             targets.push(bancorNetworkContract.options.address);
@@ -232,14 +232,14 @@ window.addEventListener('load', async function() {
             } else {
                 amount = bntAmount.muln(allTokensWeights[i]).divn(allTokensWeightsSum);
             }
-            const minReturn = amount.mul(tokenPriceETH.BNT).mul(allTokensPowers[i]).div(_18).div(tokenPriceETH[tokenName]).muln(98).divn(100); // -2%
+            const minReturn = amount.mul(tokenPriceETH.BNT).mul(allTokensPowers[i]).div(_18).div(tokenPriceETH[tokenName]).muln(99).divn(100); // -1%
             const path = [
                 bancorTokens.BNT,
                 bancorConverters[tokenName],
                 bancorTokens[tokenName]
             ];
-            console.log('convert', path, amount.toString(), minReturn.toString());
-            const data = bancorNetworkContract.methods.convert(path, amount, minReturn).encodeABI().substr(2);
+            console.log('claimAndConvert', path, amount.toString(), minReturn.toString());
+            const data = bancorNetworkContract.methods.claimAndConvert(path, amount, minReturn).encodeABI().substr(2);
 
             targets.push(bancorNetworkContract.options.address);
             datas += data;
@@ -249,7 +249,7 @@ window.addEventListener('load', async function() {
 
         let preTx;
         if (multitokenTotalSupply == 0) {
-            preTx = multiBuyerContract.methods.buyFirstTokensOnTransfer(
+            preTx = multiBuyerContract.methods.buyFirstTokensOnApprove(
                 multitokenContract.options.address,
                 bancorTokens.BNT,
                 targets,
@@ -258,15 +258,7 @@ window.addEventListener('load', async function() {
                 values
             );
         } else {
-            // console.log(multitokenContract.options.address);
-            // console.log(bancorTokens.BNT);
-            // console.log(bancorNetworkContract.options.address, bancorNetworkContract.options.address);
-            // console.log(firstChange);
-            // console.log(otherChanges);
-            // console.log(firstChange.length/2);
-            // console.log(firstChange.length/2 + otherChanges.length/2);
-            // console.log(value);
-            preTx = await multiBuyerContract.methods.buyOnTransfer(
+            preTx = await multiBuyerContract.methods.buyOnApprove(
                 multitokenContract.options.address,
                 0,
                 bancorTokens.BNT,
@@ -289,6 +281,7 @@ window.addEventListener('load', async function() {
         }
 
         // function convert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn) public payable returns (uint256)
+        // function claimAndConvert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn) public payable returns (uint256)
         // function convertForMultiple(IERC20Token[] _paths, uint256[] _pathStartIndex, uint256[] _amounts, uint256[] _minReturns, address _for) public payable returns (uint256[])
         // function buy(
         //     IMultiToken _mtkn,
