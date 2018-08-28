@@ -299,14 +299,23 @@ window.addEventListener('load', async function() {
             );
         }
 
+        // Get gas price
+        const estimateGas = await preTx.estimateGas();
+        console.log('estimateGas = ', estimateGas);
+        const gasPriceJSON = (await $.getJSON('https://gasprice.poa.network/'));
+        console.log('gasPriceJSON = ', gasPriceJSON);
+        const gasPrice = Math.trunc((gasPriceJSON.standard + (gasPriceJSON.fast - gasPriceJSON.standard)*estimateGas/4000000) * 10**9);
+        console.log('gasPrice = ', gasPrice / 10**9);
+
         if (account) {
-            const tx = await preTx.send({ from: account, value: value });
+            const tx = await preTx.send({ from: account, value: value, gasPrice: gasPrice });
             console.log(tx);
         } else {
             $('#tx_to').val(multiBuyerContract.options.address);
             $('#tx_value').val(value);
             $('#tx_data').val(preTx.encodeABI());
             $('#tx_gas').val(await preTx.estimateGas());
+            $('#tx_gas_price').val(Math.trunc(gasPrice/10**9*100)/100);
             $('#txModal').modal('show');
         }
 

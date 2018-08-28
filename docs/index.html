@@ -54,6 +54,10 @@
 							</select>
 						</div>
 					</div>
+                    <div class="form-group">
+                        <label for="new-multitoken-tokens">New MultiToken tokens and proportions:</label>
+                        <textarea class="form-control" rows="10" id="new-multitoken-tokens"></textarea>
+                    </div>
 				</div>
 				<div id="multitokensTab" class="tab-pane">
 					<div class="form-group">
@@ -144,6 +148,10 @@
                             <div class="input-group-append">
                                 <button id="tx_gas_copy" class="btn btn-outline-secondary" type="button">Copy</button>
                             </div>
+                        </div>
+                        <label for="tx_data">Recommended Gas Price:</label>
+                        <div class="input-group mb-3">
+                            <input readonly class="form-control" id="tx_gas_price" aria-describedby="basic-addon2">
                         </div>
                     </div>
                     <div class="modal-footer">
