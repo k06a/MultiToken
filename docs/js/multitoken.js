@@ -114,11 +114,10 @@ async function connectToWeb3() {
 
 async function sendTransaction(preTx, value, to) {
     // Get gas price
-    console.log(preTx);
-    const estimateGas = await preTx.estimateGas();
-    console.log('estimateGas = ', estimateGas);
     const gasPriceJSON = (await $.getJSON('https://gasprice.poa.network/'));
     console.log('gasPriceJSON = ', gasPriceJSON);
+    const estimateGas = await preTx.estimateGas({from: account, value: value, gasPrice: gasPriceJSON.standard});
+    console.log('estimateGas = ', estimateGas);
     const gasPrice = Math.trunc((gasPriceJSON.standard + (gasPriceJSON.fast - gasPriceJSON.standard)*estimateGas/4000000) * 10**9);
     console.log('gasPrice = ', gasPrice / 10**9);
 
@@ -129,7 +128,7 @@ async function sendTransaction(preTx, value, to) {
         $('#tx_to').val(to);
         $('#tx_value').val(value);
         $('#tx_data').val(preTx.encodeABI());
-        $('#tx_gas').val(await preTx.estimateGas());
+        $('#tx_gas').val(estimateGas);
         $('#tx_gas_price').val(Math.trunc(gasPrice/10**9*100)/100 + ' Gwei');
         $('#txModal').modal('show');
     }
@@ -351,7 +350,7 @@ window.addEventListener('load', async function() {
             targets.push(bancorNetworkContract.options.address);
             datas += data;
             datasIndexes.push(datas.length/2);
-            values.push(amount);
+            values.push(0);
         }
 
         let preTx;
