@@ -42,24 +42,11 @@
 			</div>
 			
 			<ul class="nav nav-tabs">
-				<li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#deployersTab">Deployers</a></li>
-				<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#multitokensTab">MultiTokens</a></li>
+				<li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#multitokensTab">MultiTokens</a></li>
+                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#deployersTab">New</a></li>				
 			</ul>
 			<div class="tab-content">
-				<div id="deployersTab" class="tab-pane active visible">
-					<div class="form-group">
-						<div class="input-group mb-3">
-							<select class="custom-select" id="multiTokenDeployers">
-								<option selected>New</option>
-							</select>
-						</div>
-					</div>
-                    <div class="form-group">
-                        <label for="new-multitoken-tokens">New MultiToken tokens and proportions:</label>
-                        <textarea class="form-control" rows="10" id="new-multitoken-tokens"></textarea>
-                    </div>
-				</div>
-				<div id="multitokensTab" class="tab-pane">
+				<div id="multitokensTab" class="tab-pane active visible">
 					<div class="form-group">
 						<div class="input-group mb-3">
 							<select class="custom-select" id="multiTokens">
@@ -107,6 +94,32 @@
 
 						<!-- <button type="button" class="btn btn-danger" id="sell-for-eth">Sell for ETH</button><br/> -->
 					</div>
+				</div>
+                <div id="deployersTab" class="tab-pane">
+					<div class="form-group">
+						<div class="input-group mb-3">
+							<select class="custom-select" id="multiTokenDeployers">
+								<option selected>New</option>
+							</select>
+						</div>
+					</div>
+                    <div class="form-group">
+                        <label for="new-multitoken-name">MultiToken name:</label>
+                        <input type="text" class="form-control" id="new-multitoken-name" value="" placeholder="">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-multitoken-symbol">MultiToken symbol:</label>
+                        <input type="text" class="form-control" id="new-multitoken-symbol" value="" placeholder="">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-multitoken-tokens">Tokens addressed:</label>
+                        <textarea class="form-control" rows="4" id="new-multitoken-tokens"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-multitoken-weights">Tokens integer weights:</label>
+                        <textarea class="form-control" rows="4" id="new-multitoken-weights"></textarea>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="new-multitoken-create">Create</button>
 				</div>
 			</div>
 		</div>

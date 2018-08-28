@@ -112,6 +112,29 @@ async function connectToWeb3() {
     accountPromiseDone = null;
 }
 
+async function sendTransaction(preTx, value, to) {
+    // Get gas price
+    console.log(preTx);
+    const estimateGas = await preTx.estimateGas();
+    console.log('estimateGas = ', estimateGas);
+    const gasPriceJSON = (await $.getJSON('https://gasprice.poa.network/'));
+    console.log('gasPriceJSON = ', gasPriceJSON);
+    const gasPrice = Math.trunc((gasPriceJSON.standard + (gasPriceJSON.fast - gasPriceJSON.standard)*estimateGas/4000000) * 10**9);
+    console.log('gasPrice = ', gasPrice / 10**9);
+
+    if (account) {
+        const tx = await preTx.send({ from: account, value: value, gasPrice: gasPrice });
+        console.log(tx);
+    } else {
+        $('#tx_to').val(to);
+        $('#tx_value').val(value);
+        $('#tx_data').val(preTx.encodeABI());
+        $('#tx_gas').val(await preTx.estimateGas());
+        $('#tx_gas_price').val(Math.trunc(gasPrice/10**9*100)/100 + ' Gwei');
+        $('#txModal').modal('show');
+    }
+}
+
 window.addEventListener('load', async function() {
 
     $('#multiTokenNetworkAddress').bind('input', async function() {
@@ -176,6 +199,60 @@ window.addEventListener('load', async function() {
             const accountBalance = web3js.utils.toBN(await multitokenContract.methods.balanceOf(account).call());
             $('#sell-for-eth-input').val(accountBalance.toString());
         }
+    });
+
+    $('#new-multitoken-create').bind('click', async function () {
+        const multitokenContract = new web3js.eth.Contract(multiTokenABI, $('#multiTokens').val());
+        const networkContract = new web3js.eth.Contract(multiTokenNetworkABI, $('#multiTokenNetworkAddress').val());
+        
+        const multitokenName = $('#new-multitoken-name').val();
+        const multitokenSymbol = $('#new-multitoken-symbol').val();
+        const multitokenTokens = $('#new-multitoken-tokens').val().split('\n');
+        const multitokenWeights = $('#new-multitoken-weights').val().split('\n');
+
+        if (multitokenName.length == 0 || !/^[0-9a-zA-Z +-_]+$/.test(multitokenName)) {
+            alert(`New MultiToken name "${multitokenName}" is invalid`);
+            return;
+        }
+
+        if (multitokenSymbol.length == 0 || !/^[0-9a-zA-Z-_]+$/.test(multitokenSymbol)) {
+            alert(`New MultiToken symbol "${multitokenSymbol}" is invalid`);
+            return;
+        }
+
+        for (let i in multitokenTokens) {
+            if (multitokenTokens[i].length == 0 || !/^0x[0-9a-zA-Z]{40}$/.test(multitokenTokens[i])) {
+                alert(`New MultiToken token #${i+1} with name "${multitokenTokens[i]}" is invalid`);
+                return;
+            }
+            if (multitokenTokens[i] != web3js.utils.toChecksumAddress(multitokenTokens[i])) {
+                alert(`New MultiToken token #${multitokenTokens[i]} address checksum is wrong`);
+                return;
+            }
+        }
+
+        if (multitokenTokens.length != multitokenWeights.length) {
+            alert(`New MultiToken subtokens (${multitokenTokens.length}) and weights (${multitokenWeights.length}) amounts should match`);
+            return;
+        }
+
+        for (let i in multitokenWeights) {
+            if (multitokenWeights[i].length == 0 || Number.parseInt(multitokenWeights) <= 0) {
+                alert(`New MultiToken weight #${i+1} with value "${multitokenWeights[i]}" is invalid`);
+                return;
+            }
+        }
+
+        const index = $('#multiTokenDeployers').prop('selectedIndex');
+        console.log('Deployer index = ' + index)
+        console.log('multitokenTokens = ' + multitokenTokens);
+        console.log('multitokenWeights = ' + multitokenWeights);
+        console.log('multitokenName = ' + multitokenName);
+        console.log('multitokenSymbol = ' + multitokenSymbol);
+        const data = multitokenContract.methods.init(multitokenTokens, multitokenWeights, multitokenName, multitokenSymbol, 18).encodeABI();
+        const preTx = networkContract.methods.deploy(index, data);
+
+        sendTransaction(preTx, 0, networkContract.options.address);
     });
 
     $('#buy-for-eth').bind('click', async function () {
@@ -299,25 +376,8 @@ window.addEventListener('load', async function() {
             );
         }
 
-        // Get gas price
-        const estimateGas = await preTx.estimateGas();
-        console.log('estimateGas = ', estimateGas);
-        const gasPriceJSON = (await $.getJSON('https://gasprice.poa.network/'));
-        console.log('gasPriceJSON = ', gasPriceJSON);
-        const gasPrice = Math.trunc((gasPriceJSON.standard + (gasPriceJSON.fast - gasPriceJSON.standard)*estimateGas/4000000) * 10**9);
-        console.log('gasPrice = ', gasPrice / 10**9);
 
-        if (account) {
-            const tx = await preTx.send({ from: account, value: value, gasPrice: gasPrice });
-            console.log(tx);
-        } else {
-            $('#tx_to').val(multiBuyerContract.options.address);
-            $('#tx_value').val(value);
-            $('#tx_data').val(preTx.encodeABI());
-            $('#tx_gas').val(await preTx.estimateGas());
-            $('#tx_gas_price').val(Math.trunc(gasPrice/10**9*100)/100);
-            $('#txModal').modal('show');
-        }
+        sendTransaction(preTx, value, multiBuyerContract.options.address);
 
         // function convert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn) public payable returns (uint256)
         // function claimAndConvert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn) public payable returns (uint256)
@@ -425,17 +485,52 @@ window.addEventListener('load', async function() {
             sellData
         );
 
-        if (account) {
-            const tx = await preTx.send({ from: account });
-            console.log(tx);
-        } else {
-            $('#tx_to').val(multiSellerContract.options.address);
-            $('#tx_value').val(0);
-            $('#tx_data').val(preTx.encodeABI());
-            $('#tx_gas').val(await preTx.estimateGas());
-            $('#txModal').modal('show');
-        }
+        sendTransaction(preTx, 0, multiSellerContract.options.address);
     });
+
+    // SETUP UI
+
+    for (const name of ['#tx_to', '#tx_value', '#tx_data', '#tx_gas']) {
+        let buttonName = name + '_copy';
+        $(buttonName).tooltip();
+
+        $(buttonName).bind('click', function() {
+            var input = document.querySelector(name);
+            input.setSelectionRange(0, input.value.length + 1);
+
+            var copy = function (e) {
+                e.preventDefault();
+                if (e.clipboardData) {
+                    e.clipboardData.setData('text/plain', input.value);
+                } else if (window.clipboardData) {
+                    window.clipboardData.setData('Text', input.value);
+                }
+            }
+
+            window.addEventListener('copy', copy);
+            try {
+                if (document.execCommand('copy')) {
+                    $(buttonName).trigger('copied', ['Copied!']);
+                } else {
+                    $(buttonName).trigger('copied', ['Copy with Ctrl/Cmd+C']);
+                }
+            } catch (err) {
+                $(buttonName).trigger('copied', ['Copy with Ctrl/Cmd+C']);
+            }
+            window.removeEventListener('copy', copy);
+        });
+
+        $(buttonName).bind('copied', function(event, message) {
+            $(this).attr('title', message)
+                .tooltip('_fixTitle') // https://github.com/mistic100/jQuery-QueryBuilder/issues/432#issuecomment-395164492
+                .tooltip('show')
+                .attr('title', 'Copy to Clipboard')
+                .tooltip('_fixTitle');
+            setTimeout
+        });
+    }
+
+    // SETUP WEB3
 
     connectToWeb3();
     let _10 = web3js.utils.toBN(10**10);
