@@ -489,20 +489,17 @@ window.addEventListener('load', async function() {
 
     // SETUP UI
 
-    for (const name of ['#tx_to', '#tx_value', '#tx_data', '#tx_gas']) {
+    for (const name of ['#tx_to', '#tx_value', '#tx_data', '#tx_gas', '#multiTokens', '#multiTokenDeployers']) {
         let buttonName = name + '_copy';
         $(buttonName).tooltip();
 
         $(buttonName).bind('click', function() {
-            var input = document.querySelector(name);
-            input.setSelectionRange(0, input.value.length + 1);
-
             var copy = function (e) {
                 e.preventDefault();
                 if (e.clipboardData) {
-                    e.clipboardData.setData('text/plain', input.value);
+                    e.clipboardData.setData('text/plain', $(name).val());
                 } else if (window.clipboardData) {
-                    window.clipboardData.setData('Text', input.value);
+                    window.clipboardData.setData('Text', $(name).val());
                 }
             }
 
