@@ -3,6 +3,7 @@ pragma solidity ^0.4.24;
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-solidity/contracts/lifecycle/Pausable.sol";
 import "./IDeployer.sol";
+import "../interface/IMultiToken.sol";
 
 
 contract MultiTokenNetwork is Pausable {
@@ -37,8 +38,16 @@ contract MultiTokenNetwork is Pausable {
         multitokens.length -= 1;
     }
 
-    function pauseMultitoken(uint index) public onlyOwner {
-        Pausable(multitokens[index]).pause();
+    function denyBundlingMultitoken(uint index) public onlyOwner {
+        IBasicMultiToken(multitokens[index]).denyBundling();
+    }
+
+    function allowBundlingMultitoken(uint index) public onlyOwner {
+        IBasicMultiToken(multitokens[index]).allowBundling();
+    }
+
+    function denyChangesMultitoken(uint index) public onlyOwner {
+        IMultiToken(multitokens[index]).denyChanges();
     }
 
     function setDeployer(uint256 index, IDeployer deployer) public onlyOwner whenNotPaused {

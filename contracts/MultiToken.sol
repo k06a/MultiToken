@@ -10,6 +10,14 @@ contract MultiToken is IMultiToken, BasicMultiToken {
 
     uint256 internal minimalWeight;
     mapping(address => uint256) public weights;
+    bool public changesDenied;
+
+    event ChangesDenied();
+
+    modifier changesEnabled {
+        require(!changesDenied, "Operation can't be performed because changes are denied");
+        _;
+    }
 
     function init(ERC20[] _tokens, uint256[] _weights, string _name, string _symbol, uint8 _decimals) public {
         super.init(_tokens, _name, _symbol, _decimals);
@@ -38,7 +46,7 @@ contract MultiToken is IMultiToken, BasicMultiToken {
         }
     }
 
-    function change(address _fromToken, address _toToken, uint256 _amount, uint256 _minReturn) public notInLendingMode returns(uint256 returnAmount) {
+    function change(address _fromToken, address _toToken, uint256 _amount, uint256 _minReturn) public changesEnabled notInLendingMode returns(uint256 returnAmount) {
         returnAmount = getReturn(_fromToken, _toToken, _amount);
         require(returnAmount > 0, "The return amount is zero");
         require(returnAmount >= _minReturn, "The return amount is less than _minReturn value");
@@ -47,6 +55,14 @@ contract MultiToken is IMultiToken, BasicMultiToken {
         ERC20(_toToken).checkedTransfer(msg.sender, returnAmount);
 
         emit Change(_fromToken, _toToken, msg.sender, _amount, returnAmount);
+    }
+
+    // Admin methods
+
+    function denyChanges() public onlyOwner {
+        require(!changesDenied);
+        changesDenied = true;
+        emit ChangesDenied();
     }
 
     // Public Getters

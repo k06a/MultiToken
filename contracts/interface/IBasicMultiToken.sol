@@ -19,4 +19,7 @@ contract IBasicMultiToken is ERC20 {
 
     function unbundle(address _beneficiary, uint256 _value) public;
     function unbundleSome(address _beneficiary, uint256 _value, ERC20[] _tokens) public;
+
+    function denyBundling() public;
+    function allowBundling() public;
 }

@@ -9,7 +9,7 @@ import "./MultiToken.sol";
 contract FeeMultiToken is Ownable, MultiToken {
     using CheckedERC20 for ERC20;
 
-    uint256 public constant ONE_HUNDRED_PERCRENTS = 1000000;
+    uint256 public constant TOTAL_PERCRENTS = 1000000;
     uint256 public lendFee;
     uint256 public changeFee;
     uint256 public refferalFee;
@@ -34,7 +34,7 @@ contract FeeMultiToken is Ownable, MultiToken {
     }
 
     function getReturn(address _fromToken, address _toToken, uint256 _amount) public view returns(uint256 returnAmount) {
-        returnAmount = super.getReturn(_fromToken, _toToken, _amount).mul(ONE_HUNDRED_PERCRENTS.sub(changeFee)).div(ONE_HUNDRED_PERCRENTS);
+        returnAmount = super.getReturn(_fromToken, _toToken, _amount).mul(TOTAL_PERCRENTS.sub(changeFee)).div(TOTAL_PERCRENTS);
     }
 
     function change(address _fromToken, address _toToken, uint256 _amount, uint256 _minReturn) public returns(uint256 returnAmount) {
@@ -44,8 +44,8 @@ contract FeeMultiToken is Ownable, MultiToken {
     function changeWithRef(address _fromToken, address _toToken, uint256 _amount, uint256 _minReturn, address _ref) public returns(uint256 returnAmount) {
         returnAmount = super.change(_fromToken, _toToken, _amount, _minReturn);
         uint256 refferalAmount = returnAmount
-            .mul(changeFee).div(ONE_HUNDRED_PERCRENTS.sub(changeFee))
-            .mul(refferalFee).div(ONE_HUNDRED_PERCRENTS);
+            .mul(changeFee).div(TOTAL_PERCRENTS.sub(changeFee))
+            .mul(refferalFee).div(TOTAL_PERCRENTS);
 
         ERC20(_toToken).checkedTransfer(_ref, refferalAmount);
     }
@@ -53,6 +53,6 @@ contract FeeMultiToken is Ownable, MultiToken {
     function lend(address _to, ERC20 _token, uint256 _amount, address _target, bytes _data) public payable {
         uint256 prevBalance = _token.balanceOf(this);
         super.lend(_to, _token, _amount, _target, _data);
-        require(_token.balanceOf(this) >= prevBalance.mul(ONE_HUNDRED_PERCRENTS.add(lendFee)).div(ONE_HUNDRED_PERCRENTS), "lend: tokens must be returned with lend fee");
+        require(_token.balanceOf(this) >= prevBalance.mul(TOTAL_PERCRENTS.add(lendFee)).div(TOTAL_PERCRENTS), "lend: tokens must be returned with lend fee");
     }
 }

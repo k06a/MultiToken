@@ -1,6 +1,6 @@
 pragma solidity ^0.4.24;
 
-import "openzeppelin-solidity/contracts/lifecycle/Pausable.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/DetailedERC20.sol";
 import "./ext/CheckedERC20.sol";
@@ -8,17 +8,24 @@ import "./ext/ERC1003Token.sol";
 import "./interface/IBasicMultiToken.sol";
 
 
-contract BasicMultiToken is Pausable, StandardToken, DetailedERC20, ERC1003Token, IBasicMultiToken {
+contract BasicMultiToken is Ownable, StandardToken, DetailedERC20, ERC1003Token, IBasicMultiToken {
     using CheckedERC20 for ERC20;
 
     ERC20[] public tokens;
     uint internal inLendingMode;
+    bool public bundlingDenied;
 
     event Bundle(address indexed who, address indexed beneficiary, uint256 value);
     event Unbundle(address indexed who, address indexed beneficiary, uint256 value);
+    event BundlingDenied(bool denied);
 
     modifier notInLendingMode {
         require(inLendingMode == 0, "Operation can't be performed while lending");
+        _;
+    }
+
+    modifier bundlingEnabled {
+        require(!bundlingDenied, "Operation can't be performed because bundling is denied");
         _;
     }
 
@@ -38,12 +45,12 @@ contract BasicMultiToken is Pausable, StandardToken, DetailedERC20, ERC1003Token
         tokens = _tokens;
     }
 
-    function bundleFirstTokens(address _beneficiary, uint256 _amount, uint256[] _tokenAmounts) public whenNotPaused notInLendingMode {
-        require(totalSupply_ == 0, "This method can be used with zero total supply only");
+    function bundleFirstTokens(address _beneficiary, uint256 _amount, uint256[] _tokenAmounts) public bundlingEnabled notInLendingMode {
+        require(totalSupply_ == 0, "bundleFirstTokens: This method can be used with zero total supply only");
         _bundle(_beneficiary, _amount, _tokenAmounts);
     }
 
-    function bundle(address _beneficiary, uint256 _amount) public whenNotPaused notInLendingMode {
+    function bundle(address _beneficiary, uint256 _amount) public bundlingEnabled notInLendingMode {
         require(totalSupply_ != 0, "This method can be used with non zero total supply only");
         uint256[] memory tokenAmounts = new uint256[](tokens.length);
         for (uint i = 0; i < tokens.length; i++) {
@@ -74,10 +81,28 @@ contract BasicMultiToken is Pausable, StandardToken, DetailedERC20, ERC1003Token
         }
     }
 
+    // Admin methods
+
+    function denyBundling() public onlyOwner {
+        require(!bundlingDenied);
+        bundlingDenied = true;
+        emit BundlingDenied(true);
+    }
+
+    function allowBundling() public onlyOwner {
+        require(bundlingDenied);
+        bundlingDenied = false;
+        emit BundlingDenied(false);
+    }
+
+    // Internal methods
+
     function _bundle(address _beneficiary, uint256 _amount, uint256[] _tokenAmounts) internal {
+        require(_amount != 0, "Bundling amount should be non-zero");
         require(tokens.length == _tokenAmounts.length, "Lenghts of tokens and _tokenAmounts array should be equal");
 
         for (uint i = 0; i < tokens.length; i++) {
+            require(_tokenAmounts[i] != 0, "Token amount should be non-zero");
             tokens[i].checkedTransferFrom(msg.sender, this, _tokenAmounts[i]); // Can't use require because not all ERC20 tokens return bool
         }
 
