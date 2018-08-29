@@ -116,7 +116,7 @@ async function sendTransaction(preTx, value, to) {
     // Get gas price
     const gasPriceJSON = (await $.getJSON('https://gasprice.poa.network/'));
     console.log('gasPriceJSON = ', gasPriceJSON);
-    const estimateGas = await preTx.estimateGas({from: account, value: value, gasPrice: gasPriceJSON.standard});
+    const estimateGas = await preTx.estimateGas({ from: account, value: value, gasPrice: gasPriceJSON.standard * 10**9 });
     console.log('estimateGas = ', estimateGas);
     const gasPrice = Math.trunc((gasPriceJSON.standard + (gasPriceJSON.fast - gasPriceJSON.standard)*estimateGas/4000000) * 10**9);
     console.log('gasPrice = ', gasPrice / 10**9);
@@ -292,10 +292,17 @@ window.addEventListener('load', async function() {
         console.log('allTokensWeightsSum = ' + allTokensWeightsSum);
 
         // Get token prices to determine amounts
-        const json = await $.getJSON('https://api.bancor.network/0.1/currencies/tokens?limit=100&skip=0&fromCurrencyCode=ETH&includeTotal=false&orderBy=liquidityDepth&sortOrder=desc');
+        let skip = 0;
         const tokenPriceETH = {};
-        for (let object of json.data.currencies.page) {
-            tokenPriceETH[object.code] = web3js.utils.toBN(Math.trunc(object.price * 10**10));
+        while (Object.keys(tokenPriceETH).length % 100 == 0) {
+            const json = await $.getJSON(`https://api.bancor.network/0.1/currencies/tokens?limit=100&skip=${skip}&fromCurrencyCode=ETH&includeTotal=false&orderBy=liquidityDepth&sortOrder=desc`);
+            if (!json.data.currencies.page.length) {
+                break;
+            }
+            for (let object of json.data.currencies.page) {
+                tokenPriceETH[object.code] = web3js.utils.toBN(Math.trunc(object.price * 10**10));
+            }
+            skip += 100;
         }
 
         const multitokenCapitalizationWei = allTokensBalances
