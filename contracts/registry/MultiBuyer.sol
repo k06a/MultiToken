@@ -98,6 +98,7 @@ contract MultiBuyer is CanReclaimToken {
         uint256[] memory amounts = new uint256[](tokensCount);
         for (i = 0; i < tokensCount; i++) {
             ERC20 token = _mtkn.tokens(i);
+            amounts[i] = token.balanceOf(this);
             if (token.allowance(this, _mtkn) == 0) {
                 token.approve(_mtkn, uint256(-1));
             }
