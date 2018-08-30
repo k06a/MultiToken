@@ -431,10 +431,17 @@ window.addEventListener('load', async function() {
         console.log('allTokensBalances = ' + allTokensBalances.map(a => a.toString()));
 
         // Get token prices to determine amounts
-        const json = await $.getJSON('https://api.bancor.network/0.1/currencies/tokens?limit=100&skip=0&fromCurrencyCode=ETH&includeTotal=false&orderBy=liquidityDepth&sortOrder=desc');
+        let skip = 0;
         const tokenPriceETH = {};
-        for (let object of json.data.currencies.page) {
-            tokenPriceETH[object.code] = web3js.utils.toBN(Math.trunc(object.price * 10**10));
+        while (Object.keys(tokenPriceETH).length % 100 == 0) {
+            const json = await $.getJSON(`https://api.bancor.network/0.1/currencies/tokens?limit=100&skip=${skip}&fromCurrencyCode=ETH&includeTotal=false&orderBy=liquidityDepth&sortOrder=desc`);
+            if (!json.data.currencies.page.length) {
+                break;
+            }
+            for (let object of json.data.currencies.page) {
+                tokenPriceETH[object.code] = web3js.utils.toBN(Math.trunc(object.price * 10**10));
+            }
+            skip += 100;
         }
 
         const targets = [];
@@ -540,4 +547,30 @@ window.addEventListener('load', async function() {
     let _18 = web3js.utils.toBN(10**18);
     $('#multiTokenNetworkAddress').triggerHandler('input');
 
+
+    for (let token of Object.keys(bancorTokens)) {
+        delete bancorTokens[token];
+    }
+    for (let token of Object.keys(bancorRelays)) {
+        delete bancorRelays[token];
+    }
+    
+    let skip = 0;
+    while (true) {
+        const json = await $.getJSON(`https://api.bancor.network/0.1/currencies?limit=100&skip=${skip}`);
+        if (!json.data.currencies.page.length) {
+            break;
+        }
+
+        for (let object of json.data.currencies.page) {
+            if (object.details.type == 'erc20' || object.details.type == 'native' || object.details.subType == 'smart') {
+                bancorTokens[object.code] = object.details.contractAddress;
+            }
+            if (object.details.subType == 'relay' || object.details.subType == 'smart') {
+                const symbol = (object.details.subType == 'relay' && object.code.endsWith('BNT')) ? object.code.substr(0, object.code.length - 3) : object.code;
+                bancorRelays[symbol] = object.details.contractAddress;
+            }
+        }
+        skip += 100;
+    }
 });
