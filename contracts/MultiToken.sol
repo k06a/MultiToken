@@ -26,7 +26,7 @@ contract MultiToken is IMultiToken, BasicMultiToken {
             require(_weights[i] != 0, "The _weights array should not contains zeros");
             require(weights[tokens[i]] == 0, "The _tokens array have duplicates");
             weights[tokens[i]] = _weights[i];
-            if (minimalWeight == 0 || minimalWeight < _weights[i]) {
+            if (minimalWeight == 0 || _weights[i] < minimalWeight) {
                 minimalWeight = _weights[i];
             }
         }
@@ -41,7 +41,7 @@ contract MultiToken is IMultiToken, BasicMultiToken {
             uint256 fromBalance = ERC20(_fromToken).balanceOf(this);
             uint256 toBalance = ERC20(_toToken).balanceOf(this);
             returnAmount = _amount.mul(toBalance).mul(weights[_fromToken]).div(
-                _amount.mul(weights[_fromToken]).div(minimalWeight).add(fromBalance)
+                _amount.mul(weights[_fromToken]).div(minimalWeight).add(fromBalance).mul(weights[_toToken])
             );
         }
     }

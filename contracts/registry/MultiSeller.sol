@@ -77,7 +77,9 @@ contract MultiSeller is CanReclaimToken {
                     token.transfer(_for, token.balanceOf(this));
                     continue;
                 }
-                token.approve(_exchanges[i], token.balanceOf(this));
+                if (token.allowance(this, _exchanges[i]) == 0) {
+                    token.approve(_exchanges[i], uint256(-1));
+                }
             }
             require(_exchanges[i].call(data), "sell: exchange arbitrary call failed");
         }
