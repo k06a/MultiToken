@@ -1,5 +1,5 @@
-// @flow
-'use strict'
+'use strict';
+/* @flow */
 
 const abi = require('ethereumjs-abi');
 const BigNumber = web3.BigNumber;
@@ -9,12 +9,7 @@ const should = require('chai')
     .use(require('chai-bignumber')(web3.BigNumber))
     .should();
 
-import ether from './helpers/ether';
-import {advanceBlock} from './helpers/advanceToBlock';
-import {increaseTimeTo, duration} from './helpers/increaseTime';
-import latestTime from './helpers/latestTime';
 import EVMRevert from './helpers/EVMRevert';
-import EVMThrow from './helpers/EVMThrow';
 
 const Token = artifacts.require('Token.sol');
 const MultiToken = artifacts.require('MultiToken.sol');
@@ -39,83 +34,103 @@ contract('MultiToken', function ([_, wallet1, wallet2, wallet3, wallet4, wallet5
         await lmn.mint(_, 100e6);
     });
 
-    describe('mint', async function () {
-        beforeEach(async function() {
-            multi = await MultiToken.new([abc.address, xyz.address], [1, 1], "Multi", "1ABC_1XYZ", 18);
-        });
+    // it.only("1", async function() {
+    //     const mt = await MultiToken.new();
+    //     var x = abi.simpleEncode("init2(address[],uint256[],string,string,uint8)",
+    //         [
+    //             "0x0d8775f648430679a709e98d2b0cb6250d2887ef", // BAT
+    //             "0x744d70fdbe2ba4cf95131626614a1763df805b9e", // SNT
+    //             "0x4CEdA7906a5Ed2179785Cd3A40A69ee8bc99C466", // AION
+    //             "0x1f573d6fb3f13d689ff844b4ce37794d79a7ff1c", // BNT
+    //             "0xbf2179859fc6d5bee9bf9158632dc51678a4100e", // ELF
+    //         ],
+    //         [
+    //             3,
+    //             2,
+    //             2,
+    //             2,
+    //             1,
+    //         ],
+    //         "MostCapitalized",
+    //         "MTKN",
+    //         18);
+    //     console.log(x.toString('hex'));
+    // });
 
-        it('should not mint first tokens with mint method', async function() {
-            await multi.mint(_, 1).should.be.rejectedWith(EVMRevert);
-        });
-
-        it('should mint first tokens with mintFirstTokens method', async function() {
-            await abc.approve(multi.address, 1000e6);
-            await xyz.approve(multi.address, 500e6);
-            await multi.mintFirstTokens(_, 1000, [1000e6, 500e6]);
-        });
-
-        it('should not mint second tokens with mintFirstTokens method', async function() {
-            await abc.approve(multi.address, 1002e6);
-            await xyz.approve(multi.address, 501e6);
-            await multi.mintFirstTokens(_, 1000, [1000e6, 500e6]);
-            await multi.mintFirstTokens(_, 1, [2e6, 1e6]).should.be.rejectedWith(EVMRevert);
-        });
+    it('should failure on wrong constructor arguments', async function () {
+        const mt = await MultiToken.new();
+        await mt.init2([abc.address, xyz.address], [1, 1, 1], "Multi", "1ABC_1XYZ", 18).should.be.rejectedWith(EVMRevert);
+        await mt.init2([abc.address, xyz.address], [1], "Multi", "1ABC_1XYZ", 18).should.be.rejectedWith(EVMRevert);
+        await mt.init2([abc.address, xyz.address], [1, 0], "Multi", "1ABC_0XYZ", 18).should.be.rejectedWith(EVMRevert);
+        await mt.init2([abc.address, xyz.address], [0, 1], "Multi", "0ABC_1XYZ", 18).should.be.rejectedWith(EVMRevert);
     });
 
-    describe('burn', async function () {
-        beforeEach(async function() {
-            multi = await MultiToken.new([abc.address, xyz.address], [1, 1], "Multi", "1ABC_1XYZ", 18);
+    describe('ERC228', async function () {
+        it('should have correct tokensCount implementation', async function () {
+            const multi2 = await MultiToken.new();
+            await multi2.init2([abc.address, xyz.address], [1, 1], "Multi", "1ABC_1XYZ", 18);
+            (await multi2.tokensCount.call()).should.be.bignumber.equal(2);
+
+            const multi3 = await MultiToken.new();
+            await multi3.init2([abc.address, xyz.address, lmn.address], [1, 1, 1], "Multi", "1ABC_1XYZ", 18);
+            (await multi3.tokensCount.call()).should.be.bignumber.equal(3);
+        });
+
+        it('should have correct tokens implementation', async function () {
+            const multi2 = await MultiToken.new();
+            await multi2.init2([abc.address, xyz.address], [1, 1], "Multi", "1ABC_1XYZ", 18);
+            (await multi2.tokens.call(0)).should.be.equal(abc.address);
+            (await multi2.tokens.call(1)).should.be.equal(xyz.address);
+
+            const multi3 = await MultiToken.new();
+            await multi3.init2([abc.address, xyz.address, lmn.address], [1, 1, 1], "Multi", "1ABC_1XYZ", 18);
+            (await multi3.tokens.call(0)).should.be.equal(abc.address);
+            (await multi3.tokens.call(1)).should.be.equal(xyz.address);
+            (await multi3.tokens.call(2)).should.be.equal(lmn.address);
+        });
+
+        it('should have correct getReturn implementation', async function () {
+            const multi = await MultiToken.new();
+            await multi.init2([abc.address, xyz.address], [1, 1], "Multi", "1ABC_1XYZ", 18);
+            (await multi.getReturn.call(abc.address, xyz.address, 100)).should.be.bignumber.equal(0);
+
             await abc.approve(multi.address, 1000e6);
             await xyz.approve(multi.address, 500e6);
-            await multi.mintFirstTokens(_, 1000, [1000e6, 500e6]);
+            await multi.bundleFirstTokens(_, 1000, [1000e6, 500e6]);
+
+            (await multi.getReturn.call(abc.address, lmn.address, 100)).should.be.bignumber.equal(0);
+            (await multi.getReturn.call(lmn.address, xyz.address, 100)).should.be.bignumber.equal(0);
+            (await multi.getReturn.call(lmn.address, lmn.address, 100)).should.be.bignumber.equal(0);
+            (await multi.getReturn.call(abc.address, xyz.address, 100)).should.be.bignumber.not.equal(0);
+
+            (await multi.getReturn.call(abc.address, abc.address, 100)).should.be.bignumber.equal(0);
+            (await multi.getReturn.call(xyz.address, xyz.address, 100)).should.be.bignumber.equal(0);
         });
 
-        it('should not burn when no tokens', async function() {
-            await multi.burn(1, { from: wallet1 }).should.be.rejectedWith(EVMThrow);
-        });
+        it('should have correct change implementation for missing and same tokens', async function () {
+            const multi = await MultiToken.new();
+            await multi.init2([abc.address, xyz.address], [1, 1], "Multi", "1ABC_1XYZ", 18);
 
-        it('should not burn too many tokens', async function() {
-            await multi.burn(1001).should.be.rejectedWith(EVMThrow);
-        });
+            await abc.approve(multi.address, 1000e6);
+            await xyz.approve(multi.address, 500e6);
+            await multi.bundleFirstTokens(_, 1000, [1000e6, 500e6]);
 
-        it('should burn owned tokens', async function() {
-            await multi.burn(200);
-            await multi.burn(801).should.be.rejectedWith(EVMThrow);
-            await multi.burn(300);
-            await multi.burn(501).should.be.rejectedWith(EVMThrow);
-            await multi.burn(500);
-            await multi.burn(1).should.be.rejectedWith(EVMThrow);
+            await multi.change(abc.address, lmn.address, 100, 0).should.be.rejectedWith(EVMRevert);
+            await multi.change(lmn.address, xyz.address, 100, 0).should.be.rejectedWith(EVMRevert);
+            await multi.change(lmn.address, lmn.address, 100, 0).should.be.rejectedWith(EVMRevert);
 
-            (await abc.balanceOf.call(multi.address)).should.be.bignumber.equal(0);
-            (await xyz.balanceOf.call(multi.address)).should.be.bignumber.equal(0);
-        });
-
-        it('should be able to burn in case of some tokens paused', async function() {
-            await abc.pause();
-            await multi.burn(500).should.be.rejectedWith(EVMRevert);
-
-            const xyzBalance = await xyz.balanceOf.call(multi.address);
-            await multi.burnSome(500, [xyz.address]);
-            (await multi.balanceOf.call(_)).should.be.bignumber.equal(500);
-            (await xyz.balanceOf.call(_)).should.be.bignumber.equal(xyzBalance / 2);
-        });
-
-        it('should be able to receive airdrop while burn', async function() {
-            await lmn.transfer(multi.address, 100e6);
-            
-            const lmnBalance = await lmn.balanceOf.call(multi.address);
-            await multi.burnSome(500, [abc.address, xyz.address, lmn.address]);
-            (await multi.balanceOf.call(_)).should.be.bignumber.equal(500);
-            (await lmn.balanceOf.call(_)).should.be.bignumber.equal(lmnBalance / 2);
+            await multi.change(abc.address, abc.address, 100, 0).should.be.rejectedWith(EVMRevert);
+            await multi.change(xyz.address, xyz.address, 100, 0).should.be.rejectedWith(EVMRevert);
         });
     });
 
     describe('exchange 1:1', async function () {
         beforeEach(async function() {
-            multi = await MultiToken.new([abc.address, xyz.address], [1, 1], "Multi", "1ABC_1XYZ", 18);
+            multi = await MultiToken.new();
+            await multi.init2([abc.address, xyz.address], [1, 1], "Multi", "1ABC_1XYZ", 18);
             await abc.approve(multi.address, 1000e6);
             await xyz.approve(multi.address, 500e6);
-            await multi.mintFirstTokens(_, 1000, [1000e6, 500e6]);
+            await multi.bundleFirstTokens(_, 1000, [1000e6, 500e6]);
         });
 
         it('should have valid prices for exchange tokens', async function() {
@@ -179,35 +194,35 @@ contract('MultiToken', function ([_, wallet1, wallet2, wallet3, wallet4, wallet5
 
     describe('exchange 2:1', async function () {
         beforeEach(async function() {
-            multi = await MultiToken.new([abc.address, xyz.address], [2, 1], "Multi", "2ABC_1XYZ", 18);
+            multi = await MultiToken.new();
+            await multi.init2([abc.address, xyz.address], [2, 1], "Multi", "2ABC_1XYZ", 18);
             await abc.approve(multi.address, 1000e6);
             await xyz.approve(multi.address, 500e6);
-            await multi.mintFirstTokens(_, 1000, [1000e6, 500e6]);
+            await multi.bundleFirstTokens(_, 1000, [1000e6, 500e6]);
         });
 
         it('should have valid prices for exchange tokens', async function() {
-            (await multi.getReturn.call(abc.address, xyz.address, 10e6)).should.be.bignumber.equal(4950494/2);
-            (await multi.getReturn.call(abc.address, xyz.address, 20e6)).should.be.bignumber.equal(9803920/2);
-            (await multi.getReturn.call(abc.address, xyz.address, 30e6)).should.be.bignumber.equal(14563106/2);
-            (await multi.getReturn.call(abc.address, xyz.address, 40e6)).should.be.bignumber.equal(19230768/2);
-            (await multi.getReturn.call(abc.address, xyz.address, 50e6)).should.be.bignumber.equal(23809522/2);
-            (await multi.getReturn.call(abc.address, xyz.address, 60e6)).should.be.bignumber.equal(28301886/2);
-            (await multi.getReturn.call(abc.address, xyz.address, 70e6)).should.be.bignumber.equal(32710280/2);
-            (await multi.getReturn.call(abc.address, xyz.address, 80e6)).should.be.bignumber.equal(37037036/2);
-            (await multi.getReturn.call(abc.address, xyz.address, 90e6)).should.be.bignumber.equal(41284402/2);
-            (await multi.getReturn.call(abc.address, xyz.address, 100e6)).should.be.bignumber.equal(45454544/2);
+            (await multi.getReturn.call(abc.address, xyz.address, 10e6)).should.be.bignumber.equal(9803921);
+            (await multi.getReturn.call(abc.address, xyz.address, 20e6)).should.be.bignumber.equal(19230769);
+            (await multi.getReturn.call(abc.address, xyz.address, 30e6)).should.be.bignumber.equal(28301886);
+            (await multi.getReturn.call(abc.address, xyz.address, 40e6)).should.be.bignumber.equal(37037037);
+            (await multi.getReturn.call(abc.address, xyz.address, 50e6)).should.be.bignumber.equal(45454545);
+            (await multi.getReturn.call(abc.address, xyz.address, 60e6)).should.be.bignumber.equal(53571428);
+            (await multi.getReturn.call(abc.address, xyz.address, 70e6)).should.be.bignumber.equal(61403508);
+            (await multi.getReturn.call(abc.address, xyz.address, 80e6)).should.be.bignumber.equal(68965517);
+            (await multi.getReturn.call(abc.address, xyz.address, 90e6)).should.be.bignumber.equal(76271186);
+            (await multi.getReturn.call(abc.address, xyz.address, 100e6)).should.be.bignumber.equal(83333333);
 
-            (await multi.getReturn.call(xyz.address, abc.address, 10e6)).should.be.bignumber.equal(19607843*2);
-            (await multi.getReturn.call(xyz.address, abc.address, 20e6)).should.be.bignumber.equal(38461538*2);
-            (await multi.getReturn.call(xyz.address, abc.address, 30e6)).should.be.bignumber.equal(56603773*2 + 1);
-            (await multi.getReturn.call(xyz.address, abc.address, 40e6)).should.be.bignumber.equal(74074074*2);
-            (await multi.getReturn.call(xyz.address, abc.address, 50e6)).should.be.bignumber.equal(90909090*2 + 1);
-            (await multi.getReturn.call(xyz.address, abc.address, 60e6)).should.be.bignumber.equal(107142857*2);
-            (await multi.getReturn.call(xyz.address, abc.address, 70e6)).should.be.bignumber.equal(122807017*2 + 1);
-            (await multi.getReturn.call(xyz.address, abc.address, 80e6)).should.be.bignumber.equal(137931034*2);
-            (await multi.getReturn.call(xyz.address, abc.address, 90e6)).should.be.bignumber.equal(152542372*2 + 1);
-            (await multi.getReturn.call(xyz.address, abc.address, 100e6)).should.be.bignumber.equal(166666666*2 + 1);
+            (await multi.getReturn.call(xyz.address, abc.address, 10e6)).should.be.bignumber.equal(9803921);
+            (await multi.getReturn.call(xyz.address, abc.address, 20e6)).should.be.bignumber.equal(19230769);
+            (await multi.getReturn.call(xyz.address, abc.address, 30e6)).should.be.bignumber.equal(28301886);
+            (await multi.getReturn.call(xyz.address, abc.address, 40e6)).should.be.bignumber.equal(37037037);
+            (await multi.getReturn.call(xyz.address, abc.address, 50e6)).should.be.bignumber.equal(45454545);
+            (await multi.getReturn.call(xyz.address, abc.address, 60e6)).should.be.bignumber.equal(53571428);
+            (await multi.getReturn.call(xyz.address, abc.address, 70e6)).should.be.bignumber.equal(61403508);
+            (await multi.getReturn.call(xyz.address, abc.address, 80e6)).should.be.bignumber.equal(68965517);
+            (await multi.getReturn.call(xyz.address, abc.address, 90e6)).should.be.bignumber.equal(76271186);
+            (await multi.getReturn.call(xyz.address, abc.address, 100e6)).should.be.bignumber.equal(83333333);
         });
     });
-
 });
