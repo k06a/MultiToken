@@ -10,12 +10,12 @@ contract MultiToken is IMultiToken, BasicMultiToken {
 
     uint256 internal minimalWeight;
     mapping(address => uint256) public weights;
-    bool public changesDenied;
+    bool public changesEnabled = true;
 
-    event ChangesDenied();
+    event ChangesDisabled();
 
     modifier changesEnabled {
-        require(!changesDenied, "Operation can't be performed because changes are denied");
+        require(changesEnabled, "Operation can't be performed because changes are disabled");
         _;
     }
 
@@ -59,10 +59,10 @@ contract MultiToken is IMultiToken, BasicMultiToken {
 
     // Admin methods
 
-    function denyChanges() public onlyOwner {
-        require(!changesDenied);
-        changesDenied = true;
-        emit ChangesDenied();
+    function disableChanges() public onlyOwner {
+        require(changesEnabled, "Changes are already disabled");
+        changesEnabled = false;
+        emit ChangesDisabled();
     }
 
     // Public Getters

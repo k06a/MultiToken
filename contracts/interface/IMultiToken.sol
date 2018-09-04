@@ -13,5 +13,5 @@ contract IMultiToken is IBasicMultiToken {
     function allWeights() public view returns(uint256[] _weights);
     function allTokensDecimalsBalancesWeights() public view returns(ERC20[] _tokens, uint8[] _decimals, uint256[] _balances, uint256[] _weights);
 
-    function denyChanges() public;
+    function disableChanges() public;
 }
